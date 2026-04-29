@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: validate_argument_spec
 short_description: Validate role argument specs.
@@ -16,7 +16,8 @@ version_added: "2.11"
 options:
   argument_spec:
     description:
-        - A dictionary like AnsibleModule argument_spec. See R(argument spec definition,argument_spec).
+        - A dictionary like AnsibleModule argument_spec.
+        - See the C(options) parameter for the R(specification format,role_argument_spec).
     required: true
   provided_arguments:
     description:
@@ -46,9 +47,11 @@ attributes:
         support: none
     platform:
         platforms: all
-'''
+notes:
+    - It is unnecessary to call this module explicitly if the role contains an R(argument spec,role_argument_spec).
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: verify vars needed for this task file are present when included
   ansible.builtin.validate_argument_spec:
     argument_spec: '{{ required_data }}'
@@ -82,9 +85,9 @@ EXAMPLES = r'''
       vars:
         stuff: knows
         but: nobuts!
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 argument_errors:
   description: A list of arg validation errors.
   returned: failure
@@ -114,4 +117,4 @@ validate_args_context:
     type: role
     path: /home/user/roles/my_role/
     argument_spec_name: main
-'''
+"""

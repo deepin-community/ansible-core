@@ -1,26 +1,9 @@
-Description: Fix integration tests mount_facts, unarchive, user
- user module with "generate_ssh_key: yes" will hang due to changes in the
- ssh-keygen prompt. See https://github.com/ansible/ansible/issues/84484
+Description: Fix integration tests unarchive
 Author: Lee Garrett <debian@rocketjump.eu>
-Forwarded: no
-Last-Update: 2024-12-20
+Forwarded: https://github.com/ansible/ansible/pull/84487
+Last-Update: 2025-05-12
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/test/integration/targets/mount_facts/tasks/main.yml
-+++ b/test/integration/targets/mount_facts/tasks/main.yml
-@@ -175,9 +175,9 @@
-     - name: Test any devices have a UUID (Linux)
-       assert:
-         that:
--          - dynamic.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 1
--          - dynamic_mount.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 1
--          - static.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 1
-+          - dynamic.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 0
-+          - dynamic_mount.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 0
-+          - static.ansible_facts.mount_points.values() | list | map(attribute='uuid') | unique | length > 0
-       when: ansible_os_family not in ("Darwin", "FreeBSD")
- 
- - name: Test duplicate sources
 --- a/test/integration/targets/unarchive/tasks/test_different_language_var.yml
 +++ b/test/integration/targets/unarchive/tasks/test_different_language_var.yml
 @@ -1,10 +1,11 @@
@@ -36,19 +19,3 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
      - name: create our unarchive destination
        file:
---- a/test/integration/targets/user/tasks/main.yml
-+++ b/test/integration/targets/user/tasks/main.yml
-@@ -35,7 +35,6 @@
- - import_tasks: test_expires_min_max.yml
- - import_tasks: test_expires_warn.yml
- - import_tasks: test_shadow_backup.yml
--- import_tasks: test_ssh_key_passphrase.yml
- - import_tasks: test_password_lock.yml
- - import_tasks: test_password_lock_new_user.yml
- - include_tasks: test_local.yml
-@@ -44,5 +43,3 @@
-   when: ansible_facts.system == 'Linux'
- - import_tasks: test_inactive_new_account.yml
- - include_tasks: test_create_user_min_max.yml
--  when: ansible_facts.system == 'Linux'
--- import_tasks: ssh_keygen.yml

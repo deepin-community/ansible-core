@@ -18,15 +18,16 @@
 from __future__ import annotations
 
 import os
+import typing as _t
 
 from collections.abc import Container, Mapping, Set, Sequence
 from types import MappingProxyType
 
 from ansible import constants as C
 from ansible.errors import AnsibleError, AnsibleParserError, AnsibleAssertionError
+from ansible.module_utils.common.sentinel import Sentinel
 from ansible.module_utils.common.text.converters import to_text
 from ansible.module_utils.six import binary_type, text_type
-from ansible.playbook.attribute import FieldAttribute
 from ansible.playbook.base import Base
 from ansible.playbook.collectionsearch import CollectionSearch
 from ansible.playbook.conditional import Conditional
@@ -37,8 +38,17 @@ from ansible.playbook.taggable import Taggable
 from ansible.plugins.loader import add_all_plugin_dirs
 from ansible.utils.collection_loader import AnsibleCollectionConfig
 from ansible.utils.path import is_subpath
-from ansible.utils.sentinel import Sentinel
 from ansible.utils.vars import combine_vars
+
+# NOTE: This import is only needed for the type-checking in __init__. While there's an alternative
+#       available by using forward references this seems not to work well with commonly used IDEs.
+#       Therefore the TYPE_CHECKING hack seems to be a more universal approach, even if not being very elegant.
+#       References:
+#       * https://stackoverflow.com/q/39740632/199513
+#       * https://peps.python.org/pep-0484/#forward-references
+if _t.TYPE_CHECKING:
+    from ansible.playbook.block import Block
+    from ansible.playbook.play import Play
 
 __all__ = ['Role', 'hash_params']
 
@@ -98,13 +108,19 @@ def hash_params(params):
 
 class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
 
-    def __init__(self, play=None, from_files=None, from_include=False, validate=True, public=None, static=True):
-        self._role_name = None
-        self._role_path = None
-        self._role_collection = None
-        self._role_params = dict()
+    def __init__(self,
+                 play: Play = None,
+                 from_files: dict[str, list[str]] = None,
+                 from_include: bool = False,
+                 validate: bool = True,
+                 public: bool = None,
+                 static: bool = True) -> None:
+        self._role_name: str = None
+        self._role_path: str = None
+        self._role_collection: str = None
+        self._role_params: dict[str, dict[str, str]] = dict()
         self._loader = None
-        self.static = static
+        self.static: bool = static
 
         # includes (static=false) default to private, while imports (static=true) default to public
         # but both can be overridden by global config if set
@@ -117,26 +133,26 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         else:
             self.public = public
 
-        self._metadata = RoleMetadata()
-        self._play = play
-        self._parents = []
-        self._dependencies = []
-        self._all_dependencies = None
-        self._task_blocks = []
-        self._handler_blocks = []
-        self._compiled_handler_blocks = None
-        self._default_vars = dict()
-        self._role_vars = dict()
-        self._had_task_run = dict()
-        self._completed = dict()
-        self._should_validate = validate
+        self._metadata: RoleMetadata = RoleMetadata()
+        self._play: Play = play
+        self._parents: list[Role] = []
+        self._dependencies: list[Role] = []
+        self._all_dependencies: list[Role] | None = None
+        self._task_blocks: list[Block] = []
+        self._handler_blocks: list[Block] = []
+        self._compiled_handler_blocks: list[Block] | None = None
+        self._default_vars: dict[str, str] | None = dict()
+        self._role_vars: dict[str, str] | None = dict()
+        self._had_task_run: dict[str, bool] = dict()
+        self._completed: dict[str, bool] = dict()
+        self._should_validate: bool = validate
 
         if from_files is None:
             from_files = {}
-        self._from_files = from_files
+        self._from_files: dict[str, list[str]] = from_files
 
         # Indicates whether this role was included via include/import_role
-        self.from_include = from_include
+        self.from_include: bool = from_include
 
         self._hash = None
 
@@ -200,9 +216,9 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
 
             return r
 
-        except RuntimeError:
+        except RecursionError as ex:
             raise AnsibleError("A recursion loop was detected with the roles specified. Make sure child roles do not have dependencies on parent roles",
-                               obj=role_include._ds)
+                               obj=role_include._ds) from ex
 
     def _load_role_data(self, role_include, parent_role=None):
         self._role_name = role_include.role
@@ -274,18 +290,17 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         if task_data:
             try:
                 self._task_blocks = load_list_of_blocks(task_data, play=self._play, role=self, loader=self._loader, variable_manager=self._variable_manager)
-            except AssertionError as e:
-                raise AnsibleParserError("The tasks/main.yml file for role '%s' must contain a list of tasks" % self._role_name,
-                                         obj=task_data, orig_exc=e)
+            except AssertionError as ex:
+                raise AnsibleParserError(f"The tasks/main.yml file for role {self._role_name!r} must contain a list of tasks.", obj=task_data) from ex
 
         handler_data = self._load_role_yaml('handlers', main=self._from_files.get('handlers'))
         if handler_data:
             try:
                 self._handler_blocks = load_list_of_blocks(handler_data, play=self._play, role=self, use_handlers=True, loader=self._loader,
                                                            variable_manager=self._variable_manager)
-            except AssertionError as e:
-                raise AnsibleParserError("The handlers/main.yml file for role '%s' must contain a list of tasks" % self._role_name,
-                                         obj=handler_data, orig_exc=e)
+            except AssertionError as ex:
+                raise AnsibleParserError(f"The handlers/main.yml file for role {self._role_name!r} must contain a list of tasks.",
+                                         obj=handler_data) from ex
 
     def _get_role_argspecs(self):
         """Get the role argument spec data.
@@ -316,7 +331,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         return getattr(self._metadata, 'argument_specs', {})
 
     def _prepend_validation_task(self, task_data, argspecs):
-        '''Insert a role validation task if we have a role argument spec.
+        """Insert a role validation task if we have a role argument spec.
 
         This method will prepend a validation task to the front of the role task
         list to perform argument spec validation before any other tasks, if an arg spec
@@ -326,7 +341,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         :param argspecs: The role argument spec data dict.
 
         :returns: The (possibly modified) task list.
-        '''
+        """
         if argspecs:
             # Determine the role entry point so we can retrieve the correct argument spec.
             # This comes from the `tasks_from` value to include_role or import_role.
@@ -345,13 +360,13 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         return task_data
 
     def _create_validation_task(self, argument_spec, entrypoint_name):
-        '''Create a new task data structure that uses the validate_argument_spec action plugin.
+        """Create a new task data structure that uses the validate_argument_spec action plugin.
 
         :param argument_spec: The arg spec definition for a particular role entry point.
             This will be the entire arg spec for the entry point as read from the input file.
         :param entrypoint_name: The name of the role entry point associated with the
             supplied `argument_spec`.
-        '''
+        """
 
         # If the arg spec provides a short description, use it to flesh out the validation task name
         task_name = "Validating arguments against arg spec '%s'" % entrypoint_name
@@ -359,8 +374,8 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
             task_name = task_name + ' - ' + argument_spec['short_description']
 
         return {
-            'action': {
-                'module': 'ansible.builtin.validate_argument_spec',
+            'action': 'ansible.builtin.validate_argument_spec',
+            'args': {
                 # Pass only the 'options' portion of the arg spec to the module.
                 'argument_spec': argument_spec.get('options', {}),
                 'provided_arguments': self._role_params,
@@ -376,7 +391,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         }
 
     def _load_role_yaml(self, subdir, main=None, allow_dir=False):
-        '''
+        """
         Find and load role YAML files and return data found.
         :param subdir: subdir of role to search (vars, files, tasks, handlers, defaults)
         :type subdir: string
@@ -387,7 +402,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         :type allow_dir: bool
 
         :returns: data from the matched file(s), type can be dict or list depending on vars or tasks.
-        '''
+        """
         data = None
         file_path = os.path.join(self._role_path, subdir)
         if self._loader.path_exists(file_path) and self._loader.is_directory(file_path):
@@ -412,7 +427,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
                         raise AnsibleParserError("Failed loading '%s' for role (%s) as it is not inside the expected role path: '%s'" %
                                                  (to_text(found), self._role_name, to_text(file_path)))
 
-                    new_data = self._loader.load_from_file(found)
+                    new_data = self._loader.load_from_file(found, trusted_as_template=True)
                     if new_data:
                         if data is not None and isinstance(new_data, Mapping):
                             data = combine_vars(data, new_data)
@@ -430,10 +445,10 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         return data
 
     def _load_dependencies(self):
-        '''
+        """
         Recursively loads role dependencies from the metadata list of
         dependencies, if it exists
-        '''
+        """
 
         deps = []
         for role_include in self._metadata.dependencies:
@@ -445,7 +460,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
     # other functions
 
     def add_parent(self, parent_role):
-        ''' adds a role to the list of this roles parents '''
+        """ adds a role to the list of this roles parents """
         if not isinstance(parent_role, Role):
             raise AnsibleAssertionError()
 
@@ -533,10 +548,10 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         return self._dependencies[:]
 
     def get_all_dependencies(self):
-        '''
+        """
         Returns a list of all deps, built recursively from all child dependencies,
         in the proper order in which they should be executed or evaluated.
-        '''
+        """
         if self._all_dependencies is None:
 
             self._all_dependencies = []
@@ -579,15 +594,15 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         return block_list
 
     def has_run(self, host):
-        '''
+        """
         Returns true if this role has been iterated over completely and
         at least one task was run
-        '''
+        """
 
         return host.name in self._completed
 
     def compile(self, play, dep_chain=None):
-        '''
+        """
         Returns the task list for this role, which is created by first
         recursively compiling the tasks for all direct dependencies, and
         then adding on the tasks for this role.
@@ -595,7 +610,7 @@ class Role(Base, Conditional, Taggable, CollectionSearch, Delegatable):
         The role compile() also remembers and saves the dependency chain
         with each task, so tasks know by which route they were found, and
         can correctly take their parent's tags/conditionals into account.
-        '''
+        """
         from ansible.playbook.block import Block
         from ansible.playbook.task import Task
 

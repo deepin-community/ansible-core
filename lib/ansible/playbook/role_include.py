@@ -24,7 +24,7 @@ from ansible.playbook.role import Role
 from ansible.playbook.role.include import RoleInclude
 from ansible.utils.display import Display
 from ansible.module_utils.six import string_types
-from ansible.template import Templar
+from ansible._internal._templating._engine import TemplateEngine
 
 __all__ = ['IncludeRole']
 
@@ -61,7 +61,7 @@ class IncludeRole(TaskInclude):
         self._role_path = None
 
     def get_name(self):
-        ''' return the name of the task '''
+        """ return the name of the task """
         return self.name or "%s : %s" % (self.action, self._role_name)
 
     def get_block_list(self, play=None, variable_manager=None, loader=None):
@@ -79,7 +79,7 @@ class IncludeRole(TaskInclude):
             available_variables = variable_manager.get_vars(play=myplay, task=self)
         else:
             available_variables = {}
-        templar = Templar(loader=loader, variables=available_variables)
+        templar = TemplateEngine(loader=loader, variables=available_variables)
         from_files = templar.template(self._from_files)
 
         # build role

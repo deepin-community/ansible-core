@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: stat
 version_added: "1.3"
@@ -25,23 +25,6 @@ options:
       - Whether to follow symlinks.
     type: bool
     default: no
-  get_checksum:
-    description:
-      - Whether to return a checksum of the file.
-    type: bool
-    default: yes
-    version_added: "1.8"
-  checksum_algorithm:
-    description:
-      - Algorithm to determine checksum of file.
-      - Will throw an error if the host is unable to use specified algorithm.
-      - The remote host has to support the hashing method specified, V(md5)
-        can be unavailable if the host is FIPS-140 compliant.
-    type: str
-    choices: [ md5, sha1, sha224, sha256, sha384, sha512 ]
-    default: sha1
-    aliases: [ checksum, checksum_algo ]
-    version_added: "2.0"
   get_mime:
     description:
       - Use file magic and return data about the nature of the file. This uses
@@ -59,8 +42,11 @@ options:
     default: yes
     aliases: [ attr, attributes ]
     version_added: "2.3"
+  get_checksum:
+    version_added: "1.8"
 extends_documentation_fragment:
   -  action_common_attributes
+  -  checksum_common
 attributes:
     check_mode:
         support: full
@@ -72,9 +58,9 @@ seealso:
 - module: ansible.builtin.file
 - module: ansible.windows.win_stat
 author: Bruce Pennypacker (@bpennypacker)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # Obtain the stats of /etc/foo.conf, and check that the file still belongs
 # to 'root'. Fail otherwise.
 - name: Get stats of a file
@@ -137,9 +123,9 @@ EXAMPLES = r'''
   ansible.builtin.stat:
     path: /path/to/something
     checksum_algorithm: sha256
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 stat:
     description: Dictionary containing all the stat data, some platforms might add additional fields.
     returned: success
@@ -366,9 +352,8 @@ stat:
             type: str
             sample: "381700746"
             version_added: 2.3
-'''
+"""
 
-import errno
 import grp
 import os
 import pwd
@@ -423,7 +408,7 @@ def format_output(module, path, st):
             ('st_blksize', 'block_size'),
             ('st_rdev', 'device_type'),
             ('st_flags', 'flags'),
-            # Some Berkley based
+            # Some Berkeley based
             ('st_gen', 'generation'),
             ('st_birthtime', 'birthtime'),
             # RISCOS
@@ -470,12 +455,11 @@ def main():
             st = os.stat(b_path)
         else:
             st = os.lstat(b_path)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            output = {'exists': False}
-            module.exit_json(changed=False, stat=output)
-
-        module.fail_json(msg=e.strerror)
+    except FileNotFoundError:
+        output = {'exists': False}
+        module.exit_json(changed=False, stat=output)
+    except OSError as ex:
+        module.fail_json(msg=ex.strerror, exception=ex)
 
     # process base results
     output = format_output(module, path, st)

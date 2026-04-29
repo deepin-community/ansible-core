@@ -1,0 +1,25 @@
+ansible-core (2.19.0~beta6-1) unstable; urgency=medium
+
+  ansible 2.19 includes a new data object annotation system dubbed "Data Tagging".
+  Under the hood, this fundamentally changes how variables and templates are
+  handled. As a result, some template structures that worked without warnings in
+  previous releases might now behave differently or fail with a fatal error.
+
+  This most notably affects:
+  - templates from template tasks
+  - when/failed_when/changed_when clauses on tasks
+  - task values that involve (double) templating
+  - templating in host_vars/ and group_vars/
+
+  A detailed list of examples can be found in the 2.19 porting guide:
+  https://ansible.readthedocs.io/projects/ansible-core/devel/porting_guides/porting_guide_core_2.19.html
+
+  If you are upgrading from bookworm's ansible-core 2.14, also consider reading
+  the porting guides of all intermediate releases and updating your playbooks
+  accordingly:
+  https://ansible.readthedocs.io/projects/ansible-core/devel/porting_guides/porting_guide_core_2.15.html
+  https://ansible.readthedocs.io/projects/ansible-core/devel/porting_guides/porting_guide_core_2.16.html
+  https://ansible.readthedocs.io/projects/ansible-core/devel/porting_guides/porting_guide_core_2.17.html
+  https://ansible.readthedocs.io/projects/ansible-core/devel/porting_guides/porting_guide_core_2.18.html
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 12 Jun 2025 21:31:04 +0200

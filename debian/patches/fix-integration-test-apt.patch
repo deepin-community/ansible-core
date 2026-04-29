@@ -1,0 +1,76 @@
+Description: Fix apt integration test
+Author: Lee Garrett <debian@rocketjump.eu>
+Forwarded: https://github.com/ansible/ansible/pull/85131
+Last-Update: 2025-05-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/test/integration/targets/apt/tasks/apt.yml
++++ b/test/integration/targets/apt/tasks/apt.yml
+@@ -222,39 +222,39 @@
+   apt: pkg=hello state=absent purge=yes
+ 
+ # INSTALL WITHOUT REMOVALS
+-- name: Install hello, that conflicts with hello-traditional
++- name: Install postfix, that conflicts with exim4
+   apt:
+-    pkg: hello
++    pkg: postfix
+     state: present
+     update_cache: no
+ 
+-- name: check hello
+-  shell: dpkg-query -l hello
++- name: check postfix
++  shell: dpkg-query -l postfix
+   register: dpkg_result
+ 
+-- name: verify installation of hello
++- name: verify installation of postfix
+   assert:
+     that:
+         - "apt_result.changed"
+         - "dpkg_result.rc == 0"
+ 
+-- name: Try installing hello-traditional, that conflicts with hello
++- name: Try installing exim4, that conflicts with postfix
+   apt:
+-    pkg: hello-traditional
++    pkg: exim4
+     state: present
+     fail_on_autoremove: yes
+   ignore_errors: yes
+   register: apt_result
+ 
+-- name: verify failure of installing hello-traditional, because it is required to remove hello to install.
++- name: verify failure of installing exim4, because it is required to remove hello to install.
+   assert:
+     that:
+       - apt_result is failed
+       - '"Packages need to be removed but remove is disabled." in apt_result.msg'
+ 
+-- name: uninstall hello with apt
++- name: uninstall postfix with apt
+   apt:
+-    pkg: hello
++    pkg: postfix
+     state: absent
+     purge: yes
+     update_cache: no
+--- a/test/integration/targets/apt/tasks/repo.yml
++++ b/test/integration/targets/apt/tasks/repo.yml
+@@ -1,4 +1,15 @@
+ - block:
++  - name: "lets get some debug output"
++    shell: |
++      set -x
++      apt-cache policy
++      apt-cache policy foo
++    register: shell_result
++
++  - name: show output
++    debug:
++      var: shell_result
++
+   - name: Install foo package version 1.0.0
+     apt:
+       name: foo=1.0.0

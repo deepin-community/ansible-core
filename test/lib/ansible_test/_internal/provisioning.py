@@ -1,4 +1,5 @@
 """Provision hosts for running tests."""
+
 from __future__ import annotations
 
 import collections.abc as c
@@ -115,9 +116,11 @@ def prepare_profiles(
     else:
         run_pypi_proxy(args, targets_use_pypi)
 
+        controller_host_profile = t.cast(ControllerHostProfile, create_host_profile(args, args.controller, None))
+
         host_state = HostState(
-            controller_profile=t.cast(ControllerHostProfile, create_host_profile(args, args.controller, True)),
-            target_profiles=[create_host_profile(args, target, False) for target in args.targets],
+            controller_profile=controller_host_profile,
+            target_profiles=[create_host_profile(args, target, controller_host_profile) for target in args.targets],
         )
 
         if args.prime_containers:
@@ -129,6 +132,9 @@ def prepare_profiles(
 
         ExitHandler.register(functools.partial(cleanup_profiles, host_state))
 
+        for pre_profile in host_state.profiles:
+            pre_profile.pre_provision()
+
         def provision(profile: HostProfile) -> None:
             """Provision the given profile."""
             profile.provision()
@@ -136,7 +142,9 @@ def prepare_profiles(
             if not skip_setup:
                 profile.setup()
 
-        dispatch_jobs([(profile, WrappedThread(functools.partial(provision, profile))) for profile in host_state.profiles])
+        dispatch_jobs(
+            [(profile, WrappedThread(functools.partial(provision, profile), f'Provision: {profile}')) for profile in host_state.profiles]
+        )
 
         host_state.controller_profile.configure()
 
@@ -156,7 +164,9 @@ def prepare_profiles(
             if requirements:
                 requirements(profile)
 
-        dispatch_jobs([(profile, WrappedThread(functools.partial(configure, profile))) for profile in host_state.target_profiles])
+        dispatch_jobs(
+            [(profile, WrappedThread(functools.partial(configure, profile), f'Configure: {profile}')) for profile in host_state.target_profiles]
+        )
 
     return host_state
 

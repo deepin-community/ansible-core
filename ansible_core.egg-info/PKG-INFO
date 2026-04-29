@@ -1,6 +1,6 @@
-Metadata-Version: 2.2
+Metadata-Version: 2.4
 Name: ansible-core
-Version: 2.18.3
+Version: 2.19.4
 Summary: Radically simple IT automation
 Author: Ansible Project
 Project-URL: Homepage, https://ansible.com/
@@ -29,14 +29,16 @@ Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: COPYING
 License-File: licenses/Apache-License.txt
+License-File: licenses/BSD-3-Clause.txt
 License-File: licenses/MIT-license.txt
 License-File: licenses/PSF-license.txt
 License-File: licenses/simplified_bsd.txt
-Requires-Dist: jinja2>=3.0.0
+Requires-Dist: jinja2>=3.1.0
 Requires-Dist: PyYAML>=5.1
 Requires-Dist: cryptography
 Requires-Dist: packaging
-Requires-Dist: resolvelib<1.1.0,>=0.5.3
+Requires-Dist: resolvelib<2.0.0,>=0.5.3
+Dynamic: license-file
 
 [![PyPI version](https://img.shields.io/pypi/v/ansible-core.svg)](https://pypi.org/project/ansible-core)
 [![Docs badge](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.ansible.com/ansible/latest/)

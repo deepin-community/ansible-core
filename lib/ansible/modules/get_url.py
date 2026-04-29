@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: get_url
 short_description: Downloads files from HTTP, HTTPS, or FTP to node
@@ -87,7 +87,7 @@ options:
       - 'If a checksum is passed to this parameter, the digest of the
         destination file will be calculated after it is downloaded to ensure
         its integrity and verify that the transfer completed successfully.
-        Format: <algorithm>:<checksum|url>, for example C(checksum="sha256:D98291AC[...]B6DC7B97",
+        Format: <algorithm>:<checksum|url>, for example C(checksum="sha256:D98291AC[...]B6DC7B97"),
         C(checksum="sha256:http://example.com/path/sha256sum.txt").'
       - If you worry about portability, only the sha1 algorithm is available
         on all platforms and python versions.
@@ -219,9 +219,9 @@ seealso:
 - module: ansible.windows.win_get_url
 author:
 - Jan-Piet Mens (@jpmens)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Download foo.conf
   ansible.builtin.get_url:
     url: http://example.com/path/file.conf
@@ -272,9 +272,9 @@ EXAMPLES = r'''
     dest: /etc/foo.conf
     username: bar
     password: '{{ mysecret }}'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 backup_file:
     description: name of backup file created after download
     returned: changed and if backup=yes
@@ -365,17 +365,18 @@ url:
     returned: always
     type: str
     sample: https://www.ansible.com/
-'''
+"""
 
+import email.message
 import os
 import re
 import shutil
 import tempfile
-import traceback
+
+from datetime import datetime, timezone
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six.moves.urllib.parse import urlsplit
-from ansible.module_utils.compat.datetime import utcnow, utcfromtimestamp
 from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.urls import fetch_url, url_argument_spec
 
@@ -398,10 +399,10 @@ def url_get(module, url, dest, use_proxy, last_mod_time, force, timeout=10, head
     Return (tempfile, info about the request)
     """
 
-    start = utcnow()
+    start = datetime.now(timezone.utc)
     rsp, info = fetch_url(module, url, use_proxy=use_proxy, force=force, last_mod_time=last_mod_time, timeout=timeout, headers=headers, method=method,
                           unredirected_headers=unredirected_headers, decompress=decompress, ciphers=ciphers, use_netrc=use_netrc)
-    elapsed = (utcnow() - start).seconds
+    elapsed = (datetime.now(timezone.utc) - start).seconds
 
     if info['status'] == 304:
         module.exit_json(url=url, dest=dest, changed=False, msg=info.get('msg', ''), status_code=info['status'], elapsed=elapsed)
@@ -432,30 +433,40 @@ def url_get(module, url, dest, use_proxy, last_mod_time, force, timeout=10, head
         shutil.copyfileobj(rsp, f)
     except Exception as e:
         os.remove(tempname)
-        module.fail_json(msg="failed to create temporary content file: %s" % to_native(e), elapsed=elapsed, exception=traceback.format_exc())
+        module.fail_json(msg="failed to create temporary content file: %s" % to_native(e), elapsed=elapsed)
     f.close()
     rsp.close()
+
+    # Since shutil.copyfileobj() will read from HTTPResponse in chunks, HTTPResponse.read() will not recognize
+    # if the entire content-length of data was not read. We need to do that validation here, unless a 'chunked'
+    # transfer-encoding was used, in which case we will not know content-length because it will not be returned.
+    # But in that case, HTTPResponse will behave correctly and recognize an IncompleteRead.
+
+    is_gzip = info.get('content-encoding') == 'gzip'
+
+    if not module.check_mode and 'content-length' in info:
+        # If data is decompressed, then content-length won't match the amount of data we've read, so skip.
+        if not is_gzip or (is_gzip and not decompress):
+            st = os.stat(tempname)
+            cl = int(info['content-length'])
+            if st.st_size != cl:
+                diff = cl - st.st_size
+                module.fail_json(msg=f'Incomplete read, ({rsp.length=}, {cl=}, {st.st_size=}) failed to read remaining {diff} bytes')
+
     return tempname, info
 
 
 def extract_filename_from_headers(headers):
+    """Extracts a filename from the given dict of HTTP headers.
+
+    Returns the filename if successful, else None.
     """
-    Extracts a filename from the given dict of HTTP headers.
-
-    Looks for the content-disposition header and applies a regex.
-    Returns the filename if successful, else None."""
-    cont_disp_regex = 'attachment; ?filename="?([^"]+)'
-    res = None
-
-    if 'content-disposition' in headers:
-        cont_disp = headers['content-disposition']
-        match = re.match(cont_disp_regex, cont_disp)
-        if match:
-            res = match.group(1)
-            # Try preventing any funny business.
-            res = os.path.basename(res)
-
-    return res
+    msg = email.message.Message()
+    msg['content-disposition'] = headers.get('content-disposition', '')
+    if filename := msg.get_param('filename', header='content-disposition'):
+        # Avoid directory traversal
+        filename = os.path.basename(filename)
+    return filename
 
 
 def is_url(checksum):
@@ -464,6 +475,37 @@ def is_url(checksum):
     supported_schemes = ('http', 'https', 'ftp', 'file')
 
     return urlsplit(checksum).scheme in supported_schemes
+
+
+def parse_digest_lines(filename, lines):
+    """Returns a list of tuple containing the filename and digest depending upon
+      the lines provided
+
+    Args:
+        filename (str): Name of the filename, used only when the digest is one-liner
+        lines (list): A list of lines containing filenames and checksums
+    """
+    checksum_map = []
+    BSD_DIGEST_LINE = re.compile(r'^(\w+) ?\((?P<path>.+)\) ?= (?P<digest>[\w.]+)$')
+    GNU_DIGEST_LINE = re.compile(r'^(?P<digest>[\w.]+) ([ *])(?P<path>.+)$')
+
+    if len(lines) == 1 and len(lines[0].split()) == 1:
+        # Only a single line with a single string
+        # treat it as a checksum only file
+        checksum_map.append((lines[0], filename))
+        return checksum_map
+    # The assumption here is the file is in the format of
+    # checksum filename
+    for line in lines:
+        match = BSD_DIGEST_LINE.match(line)
+        if match:
+            checksum_map.append((match.group('digest'), match.group('path')))
+        else:
+            match = GNU_DIGEST_LINE.match(line)
+            if match:
+                checksum_map.append((match.group('digest'), match.group('path').lstrip("./")))
+
+    return checksum_map
 
 
 # ==============================================================
@@ -533,31 +575,13 @@ def main():
         if is_url(checksum):
             checksum_url = checksum
             # download checksum file to checksum_tmpsrc
-            checksum_tmpsrc, checksum_info = url_get(module, checksum_url, dest, use_proxy, last_mod_time, force, timeout, headers, tmp_dest,
-                                                     unredirected_headers=unredirected_headers, ciphers=ciphers, use_netrc=use_netrc)
+            checksum_tmpsrc, _dummy = url_get(module, checksum_url, dest, use_proxy, last_mod_time, force, timeout, headers, tmp_dest,
+                                              unredirected_headers=unredirected_headers, ciphers=ciphers, use_netrc=use_netrc)
             with open(checksum_tmpsrc) as f:
                 lines = [line.rstrip('\n') for line in f]
             os.remove(checksum_tmpsrc)
-            checksum_map = []
             filename = url_filename(url)
-            if len(lines) == 1 and len(lines[0].split()) == 1:
-                # Only a single line with a single string
-                # treat it as a checksum only file
-                checksum_map.append((lines[0], filename))
-            else:
-                # The assumption here is the file is in the format of
-                # checksum filename
-                for line in lines:
-                    # Split by one whitespace to keep the leading type char ' ' (whitespace) for text and '*' for binary
-                    parts = line.split(" ", 1)
-                    if len(parts) == 2:
-                        # Remove the leading type char, we expect
-                        if parts[1].startswith((" ", "*",)):
-                            parts[1] = parts[1][1:]
-
-                        # Append checksum and path without potential leading './'
-                        checksum_map.append((parts[0], parts[1].lstrip("./")))
-
+            checksum_map = parse_digest_lines(filename=filename, lines=lines)
             # Look through each line in the checksum file for a hash corresponding to
             # the filename in the url, returning the first hash that is found.
             for cksum in (s for (s, f) in checksum_map if f == filename):
@@ -601,7 +625,7 @@ def main():
         # If the file already exists, prepare the last modified time for the
         # request.
         mtime = os.path.getmtime(dest)
-        last_mod_time = utcfromtimestamp(mtime)
+        last_mod_time = datetime.fromtimestamp(mtime, timezone.utc)
 
         # If the checksum does not match we have to force the download
         # because last_mod_time may be newer than on remote
@@ -609,11 +633,11 @@ def main():
             force = True
 
     # download to tmpsrc
-    start = utcnow()
+    start = datetime.now(timezone.utc)
     method = 'HEAD' if module.check_mode else 'GET'
     tmpsrc, info = url_get(module, url, dest, use_proxy, last_mod_time, force, timeout, headers, tmp_dest, method,
                            unredirected_headers=unredirected_headers, decompress=decompress, ciphers=ciphers, use_netrc=use_netrc)
-    result['elapsed'] = (utcnow() - start).seconds
+    result['elapsed'] = (datetime.now(timezone.utc) - start).seconds
     result['src'] = tmpsrc
 
     # Now the request has completed, we can finally generate the final
@@ -683,8 +707,7 @@ def main():
         except Exception as e:
             if os.path.exists(tmpsrc):
                 os.remove(tmpsrc)
-            module.fail_json(msg="failed to copy %s to %s: %s" % (tmpsrc, dest, to_native(e)),
-                             exception=traceback.format_exc(), **result)
+            module.fail_json(msg="failed to copy %s to %s: %s" % (tmpsrc, dest, to_native(e)), **result)
         result['changed'] = True
     else:
         result['changed'] = False

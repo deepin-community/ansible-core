@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: find
 author: Brian Coca (@bcoca)
@@ -29,6 +29,10 @@ options:
             - You can choose seconds, minutes, hours, days, or weeks by specifying the
               first letter of any of those words (e.g., "1w").
         type: str
+    get_checksum:
+        default: false
+    checksum_algorithm:
+        version_added: "2.19"
     patterns:
         default: []
         description:
@@ -132,11 +136,6 @@ options:
             - Set this to V(true) to follow symlinks in path for systems with python 2.6+.
         type: bool
         default: no
-    get_checksum:
-        description:
-            - Set this to V(true) to retrieve a file's SHA1 checksum.
-        type: bool
-        default: no
     use_regex:
         description:
             - If V(false), the patterns are file globs (shell).
@@ -163,7 +162,7 @@ options:
             - Default is unlimited matches.
         type: int
         version_added: "2.18"
-extends_documentation_fragment: action_common_attributes
+extends_documentation_fragment: [action_common_attributes, checksum_common]
 attributes:
     check_mode:
         details: since this action does not modify the target it just executes normally during check mode
@@ -174,10 +173,10 @@ attributes:
         platforms: posix
 seealso:
 - module: ansible.windows.win_find
-'''
+"""
 
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Recursively find /tmp files older than 2 days
   ansible.builtin.find:
     paths: /tmp
@@ -246,9 +245,9 @@ EXAMPLES = r'''
     use_regex: true
     recurse: true
     limit: 1
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 files:
     description: All matches found with the specified criteria (see stat module for full output of each dictionary)
     returned: success
@@ -279,7 +278,7 @@ skipped_paths:
     type: dict
     sample: {"/laskdfj": "'/laskdfj' is not a directory"}
     version_added: '2.12'
-'''
+"""
 
 import errno
 import fnmatch
@@ -302,7 +301,7 @@ class _Object:
 
 
 def pfilter(f, patterns=None, excludes=None, use_regex=False):
-    '''filter using glob patterns'''
+    """filter using glob patterns"""
     if not patterns and not excludes:
         return True
 
@@ -341,7 +340,7 @@ def pfilter(f, patterns=None, excludes=None, use_regex=False):
 
 
 def agefilter(st, now, age, timestamp):
-    '''filter files older than age'''
+    """filter files older than age"""
     if age is None:
         return True
     elif age >= 0 and now - getattr(st, "st_%s" % timestamp) >= abs(age):
@@ -352,7 +351,7 @@ def agefilter(st, now, age, timestamp):
 
 
 def sizefilter(st, size):
-    '''filter files greater than size'''
+    """filter files greater than size"""
     if size is None:
         return True
     elif size >= 0 and st.st_size >= abs(size):
@@ -482,6 +481,9 @@ def main():
             hidden=dict(type='bool', default=False),
             follow=dict(type='bool', default=False),
             get_checksum=dict(type='bool', default=False),
+            checksum_algorithm=dict(type='str', default='sha1',
+                                    choices=['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'],
+                                    aliases=['checksum', 'checksum_algo']),
             use_regex=dict(type='bool', default=False),
             depth=dict(type='int'),
             mode=dict(type='raw'),
@@ -513,7 +515,7 @@ def main():
     skipped = {}
 
     def handle_walk_errors(e):
-        if e.errno in (errno.EPERM, errno.EACCES):
+        if e.errno in (errno.EPERM, errno.EACCES, errno.ENOENT):
             skipped[e.filename] = to_text(e)
             return
         raise e
@@ -569,9 +571,9 @@ def main():
 
                     try:
                         st = os.lstat(fsname)
-                    except (IOError, OSError) as e:
-                        module.warn("Skipped entry '%s' due to this access issue: %s\n" % (fsname, to_text(e)))
-                        skipped[fsname] = to_text(e)
+                    except OSError as ex:
+                        module.error_as_warning(f"Skipped entry {fsname!r} due to access issue.", exception=ex)
+                        skipped[fsname] = str(ex)
                         has_warnings = True
                         continue
 
@@ -583,7 +585,7 @@ def main():
 
                             r.update(statinfo(st))
                             if stat.S_ISREG(st.st_mode) and params['get_checksum']:
-                                r['checksum'] = module.sha1(fsname)
+                                r['checksum'] = module.digest_from_file(fsname, params['checksum_algorithm'])
 
                             if stat.S_ISREG(st.st_mode):
                                 if sizefilter(st, size):
@@ -608,7 +610,7 @@ def main():
 
                             r.update(statinfo(st))
                             if params['get_checksum']:
-                                r['checksum'] = module.sha1(fsname)
+                                r['checksum'] = module.digest_from_file(fsname, params['checksum_algorithm'])
                             filelist.append(r)
 
                     elif stat.S_ISLNK(st.st_mode) and params['file_type'] == 'link':

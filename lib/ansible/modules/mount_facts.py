@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2024 Ansible Project
+# Copyright: Contributors to the Ansible project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import annotations
@@ -359,7 +359,7 @@ def gen_mounts_from_stdout(stdout: str) -> t.Iterable[MountInfo]:
         elif pattern is BSD_MOUNT_RE:
             # the group containing fstype is comma separated, and may include whitespace
             mount_info = match.groupdict()
-            parts = re.split(r"\s*,\s*", match.group("fstype"), 1)
+            parts = re.split(r"\s*,\s*", match.group("fstype"), maxsplit=1)
             if len(parts) == 1:
                 mount_info["fstype"] = parts[0]
             else:

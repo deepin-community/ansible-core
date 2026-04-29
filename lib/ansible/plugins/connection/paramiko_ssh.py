@@ -248,11 +248,13 @@ from ansible.errors import (
     AnsibleError,
     AnsibleFileNotFound,
 )
-from ansible.module_utils.compat.paramiko import PARAMIKO_IMPORT_ERR, paramiko
+
+from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+from ansible.module_utils.compat.paramiko import _PARAMIKO_IMPORT_ERR as PARAMIKO_IMPORT_ERR, _paramiko as paramiko
 from ansible.plugins.connection import ConnectionBase
 from ansible.utils.display import Display
 from ansible.utils.path import makedirs_safe
-from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+from ansible.module_utils._internal import _deprecator
 
 display = Display()
 
@@ -321,10 +323,19 @@ SFTP_CONNECTION_CACHE: dict[str, paramiko.sftp_client.SFTPClient] = {}
 
 
 class Connection(ConnectionBase):
-    ''' SSH based connections with Paramiko '''
+    """ SSH based connections with Paramiko """
 
     transport = 'paramiko'
     _log_channel: str | None = None
+
+    def __init__(self, *args, **kwargs):
+        display.deprecated(  # pylint: disable=ansible-deprecated-unnecessary-collection-name
+            msg='The paramiko connection plugin is deprecated.',
+            version='2.21',
+            deprecator=_deprecator.ANSIBLE_CORE_DEPRECATOR,  # entire plugin being removed; this improves the messaging
+        )
+
+        super().__init__(*args, **kwargs)
 
     def _cache_key(self) -> str:
         return "%s__%s__" % (self.get_option('remote_addr'), self.get_option('remote_user'))
@@ -340,7 +351,7 @@ class Connection(ConnectionBase):
         return self
 
     def _set_log_channel(self, name: str) -> None:
-        '''Mimic paramiko.SSHClient.set_log_channel'''
+        """Mimic paramiko.SSHClient.set_log_channel"""
         self._log_channel = name
 
     def _parse_proxy_command(self, port: int = 22) -> dict[str, t.Any]:
@@ -366,7 +377,7 @@ class Connection(ConnectionBase):
         return sock_kwarg
 
     def _connect_uncached(self) -> paramiko.SSHClient:
-        ''' activates the connection object '''
+        """ activates the connection object """
 
         if paramiko is None:
             raise AnsibleError("paramiko is not installed: %s" % to_native(PARAMIKO_IMPORT_ERR))
@@ -402,7 +413,7 @@ class Connection(ConnectionBase):
                     # TODO: check if we need to look at several possible locations, possible for loop
                     ssh.load_system_host_keys(ssh_known_hosts)
                     break
-                except IOError:
+                except OSError:
                     pass  # file was not found, but not required to function
             ssh.load_system_host_keys()
 
@@ -444,24 +455,23 @@ class Connection(ConnectionBase):
             )
         except paramiko.ssh_exception.BadHostKeyException as e:
             raise AnsibleConnectionFailure('host key mismatch for %s' % e.hostname)
-        except paramiko.ssh_exception.AuthenticationException as e:
-            msg = 'Failed to authenticate: {0}'.format(to_text(e))
-            raise AnsibleAuthenticationFailure(msg)
-        except Exception as e:
-            msg = to_text(e)
+        except paramiko.ssh_exception.AuthenticationException as ex:
+            raise AnsibleAuthenticationFailure() from ex
+        except Exception as ex:
+            msg = str(ex)
             if u"PID check failed" in msg:
-                raise AnsibleError("paramiko version issue, please upgrade paramiko on the machine running ansible")
+                raise AnsibleError("paramiko version issue, please upgrade paramiko on the machine running ansible") from ex
             elif u"Private key file is encrypted" in msg:
                 msg = 'ssh %s@%s:%s : %s\nTo connect as a different user, use -u <username>.' % (
                     self.get_option('remote_user'), self.get_options('remote_addr'), port, msg)
-                raise AnsibleConnectionFailure(msg)
+                raise AnsibleConnectionFailure(msg) from ex
             else:
-                raise AnsibleConnectionFailure(msg)
+                raise AnsibleConnectionFailure(msg) from ex
 
         return ssh
 
     def exec_command(self, cmd: str, in_data: bytes | None = None, sudoable: bool = True) -> tuple[int, bytes, bytes]:
-        ''' run a command on the remote host '''
+        """ run a command on the remote host """
 
         super(Connection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
 
@@ -541,7 +551,7 @@ class Connection(ConnectionBase):
         return (chan.recv_exit_status(), no_prompt_out + stdout, no_prompt_out + stderr)
 
     def put_file(self, in_path: str, out_path: str) -> None:
-        ''' transfer a file from local to remote '''
+        """ transfer a file from local to remote """
 
         super(Connection, self).put_file(in_path, out_path)
 
@@ -557,8 +567,8 @@ class Connection(ConnectionBase):
 
         try:
             self.sftp.put(to_bytes(in_path, errors='surrogate_or_strict'), to_bytes(out_path, errors='surrogate_or_strict'))
-        except IOError:
-            raise AnsibleError("failed to transfer file to %s" % out_path)
+        except OSError as ex:
+            raise AnsibleError(f"Failed to transfer file to {out_path!r}.") from ex
 
     def _connect_sftp(self) -> paramiko.sftp_client.SFTPClient:
 
@@ -570,7 +580,7 @@ class Connection(ConnectionBase):
             return result
 
     def fetch_file(self, in_path: str, out_path: str) -> None:
-        ''' save a remote file to the specified path '''
+        """ save a remote file to the specified path """
 
         super(Connection, self).fetch_file(in_path, out_path)
 
@@ -583,8 +593,8 @@ class Connection(ConnectionBase):
 
         try:
             self.sftp.get(to_bytes(in_path, errors='surrogate_or_strict'), to_bytes(out_path, errors='surrogate_or_strict'))
-        except IOError:
-            raise AnsibleError("failed to transfer file from %s" % in_path)
+        except OSError as ex:
+            raise AnsibleError(f"Failed to transfer file from {in_path!r}.") from ex
 
     def _any_keys_added(self) -> bool:
 
@@ -596,10 +606,10 @@ class Connection(ConnectionBase):
         return False
 
     def _save_ssh_host_keys(self, filename: str) -> None:
-        '''
+        """
         not using the paramiko save_ssh_host_keys function as we want to add new SSH keys at the bottom so folks
         don't complain about it :)
-        '''
+        """
 
         if not self._any_keys_added():
             return
@@ -632,7 +642,7 @@ class Connection(ConnectionBase):
         self._connect()
 
     def close(self) -> None:
-        ''' terminate the connection '''
+        """ terminate the connection """
 
         cache_key = self._cache_key()
         SSH_CONNECTION_CACHE.pop(cache_key, None)

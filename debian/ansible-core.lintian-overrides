@@ -5,9 +5,13 @@ ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/l
 
 # ansible-test needs those files to work.
 ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible_test/*]
+ansible-core: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible/_internal/*]
 
 # upstream is aware of this. ansible-test is the internal testing tool.
 ansible-core binary: no-manual-page [usr/bin/ansible-test]
 
 # This is not documentation.
 ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible_core-*.dist-info/top_level.txt]
+
+# This is intentional.
+ansible-core: repeated-path-segment ansible [usr/lib/python3/dist-packages/ansible/_internal/ansible_collections/ansible/]

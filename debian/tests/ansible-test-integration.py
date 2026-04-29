@@ -37,7 +37,7 @@ def runprog (name, progargs, env=None, exit_on_failure=True):
     return proc
 
 def locale_debug(name):
-    if args.verbose >= 3:
+    if args.verbose >= 2:
         log(2, name)
         log(2, 'output of /usr/bin/locale:')
         subprocess.run(['/usr/bin/locale'])
@@ -142,10 +142,10 @@ locale_debug('locale after setting os.environ:')
 
 if args.setup is True and args.dry_run == False:
     proc = runprog('testbed-setup.sh', ['sudo', './debian/tests/testbed-setup.sh'])
-    log(2,"#### STDOUT ####")
-    log(2, proc.stdout)
-    log(2, "#### STDERR ####")
-    log(2, proc.stderr)
+    log(0,"#### STDOUT ####")
+    log(0, proc.stdout)
+    log(0, "#### STDERR ####")
+    log(0, proc.stderr)
     locale_debug('locale after running testbed-setup.sh:')
 
 # integration tests requiring a running ssh server
@@ -157,6 +157,7 @@ integration_requires_ssh = {
     'delegate_to',
     'fetch',
     'module_tracebacks',
+    'ssh_agent',
 }
 
 # integration tests requiring root because the apt module is used to
@@ -178,26 +179,20 @@ integration_fails_on_pip = {
 }
 
 integration_failing = {
-    'ansible-galaxy-collection-scm':  "ansible-core on PyPI depends on resolvelib<1.1.0",
     'ansible-galaxy-role':            'dict object has no attribute lnk_source',  ## needs upstream fix?
     'ansible-test-docker':            "pwsh doesn't exist in Debian yet",
     'ansible-test':                   'installs and runs python libs from remote',
+    'ansible-test-debugging':         'requires running built binary instead of package binary',
     'ansible-test-installed':         'checks only valid if source tree has bin/ directory',
     'ansible-test-sanity':            'checks are only valid for the source tree',
     'ansible-test-units-forked':      '?????',
     'ansible-test-vendoring':         'Should test with ./bin/ansible-test which was removed in v2.18.0', ## needs upstream fix
-    'apt_key':                        'apt-key binary is removed in apt 2.9.15 and later',
-    'apt':                            'setup_deb_repo is broken, produces repo with missing foo=1.0.0',
-    'become_su':                      'This looks like a false positive, needs upstream confirmation',
-    'deb822_repository':              'setup_deb_repo is broken, produces repo with missing foo=1.0.0',
+    'deb822_repository':              'setup_deb_repo seems to generate a repo with hashsum mismatch',
     'facts_d':                        'seems to read an unreadable problem without error', ## needs upstream fix
     'infra':                          'requires hacking/test-module.py not present',
-    'interpreter_discovery_python':   'detects /usr/bin/python3.11, expect python3, detects os_version 12.6, expects it to compare > 10',
+    'mount_facts':                    'makes assumptions about static/dynamic mounts without assuring they exist',
     'packaging_cli-doc':              'checks only valid if source tree has bin/ directory',
-    'remote_tmp':                     'Will often show false positive on: "Test tempdir is removed", needs upstream fixing',
-    'service_facts':                  "Version comparison failed: '<' not supported between instances of 'str' and 'int'",    # writes to /usr/sbin/
-    'subversion':                     'Does not properly start apache2 on Debian, debugging needed',
-    'template_jinja2_non_native':     'no need to test against latest jinja2',
+    'unarchive':                      'two unarchive tasks in a row, second one reports changed',
 }
 
 if subprocess.check_output(['dpkg', '--print-architecture'], text=True).rstrip('\n') not in {'amd64', 'ppc64el'}:
@@ -296,9 +291,9 @@ for i in targets:
         })
         continue
 
-    print ("\n" + "#"*72, flush=True)
-    print ("#### Running integration tests in", i, flush=True)
-    print ("#"*72, flush=True)
+    log(0, "\n" + "#"*72)
+    log(0, "#### Running integration tests in", i)
+    log(0, "#"*72)
 
     cmdlist = [
         'ansible-test',
@@ -312,7 +307,8 @@ for i in targets:
         pyver,
         '--local',
         '--color', 'yes',
-        i
+        i,
+        # '-vvvv', # uncomment for more test output
     ]
 
     env={
@@ -357,11 +353,21 @@ for i in targets:
         })
 
 if overall_test_rc != 0:
-    print ("#"*72, flush=True)
-    print ("#### failed tests are:", flush=True)
+    log(0, "#"*72)
+    log(0, "#### failed tests are:")
     for i in failed_tests:
-        print ("####", i['name'], flush=True)
-    print ("#"*72, flush=True)
+        log(0, "####", i['name'])
+    log(0, "#"*72)
+
+if (args.default_tests is False
+  and (args.failing or args.fails_on_pip or args.requires_ssh)
+  and len(succeeded_tests) > 0):
+    log(0, "#"*72)
+    log(0, "#### succeeded tests are:")
+    for i in succeeded_tests:
+        log(0, "####", i['name'])
+    log(0, "Consider removing these ^^^ tests from the failing list!")
+    log(0, "#"*72)
 
 log(1, '### TEST SUMMARY ###')
 log(1, 'succeeded tests:', len(succeeded_tests))

@@ -1,3 +1,122 @@
+ansible-core (2.19.4-0+deb13u1) trixie; urgency=medium
+
+  [ Lee Garrett ]
+  * New upstream bugfix release 2.19.4
+    - Fix regression from 2.18 regarding handlers and play tags (Closes:
+      #1114932)
+  * d/t/ansible-test-integration.py: Match conditional with log verbosity
+  * autopkgtest: Always emit output when testbed-setup.sh is run
+
+  [ Colin Watson ]
+  * Move apt sources lists aside more comprehensively in tests
+  * testbed-setup: Only remove autopkgtest's global pinning
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 07 Nov 2025 23:26:04 +0100
+
+ansible-core (2.19.1-0+deb13u1) trixie; urgency=medium
+
+  * New upstream bugfix release 2.19.1
+  * Update debian/gbp.conf to track trixie branches
+  * Update watch file to follow ansible-core 2.19.x in trixie
+  * Change gbp upstream tag as long as upstream version in trixie and sid match
+  * Skip ansible-test-debugging integration test (requires running from source)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 26 Aug 2025 22:44:31 +0200
+
+ansible-core (2.19.0~beta6-1) unstable; urgency=medium
+
+  * New upstream version 2.19.0~beta6
+  * Add NEWS entry documenting the disruptive changes by the new Data Tagging
+    feature in 2.19.
+  * d/control: Remove Breaks/Replaces from pre-bookworm packages.
+  * d/control: Update version recommendation for ansible package.
+  * Don't run deb822_repository integration test in autopkgtest (flaky).
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 12 Jun 2025 23:55:52 +0200
+
+ansible-core (2.19.0~beta5-1) unstable; urgency=medium
+
+  * The "Can't believe it's been a year" release
+  * New upstream version 2.19.0~beta5
+    - Allow template calls to collection mutation methods (Closes: #1106362)
+  * d/watch: Update uversionmangle to normalize beta/RC releases
+  * Drop upstream_PR84487.patch (applied upstream)
+  * Run deb822_repository integration test in autopkgtest again
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 04 Jun 2025 23:28:05 +0200
+
+ansible-core (2.19.0~beta4-1) unstable; urgency=medium
+
+  * New upstream version 2.19.0~beta4
+  * Bump jinja2 requirements
+  * d/tests/control: Add "mount" as unit test dependency.
+  * Update test meta-data patch and forward upstream again
+  * d/t/ansible-test-integration.py: replace "print" with log functions
+  * d/t/ansible-test-integration.py: Add helpful debugging comment
+  * d/t/ansible-test-integration.py: Add info when tests that should fail
+    succeed
+  * Run tests that require pip in the default test suite
+  * Update test dependencies
+  * Add 12 previously failing integration tests to the default set
+  * fix apt integration patch
+  * Add DEP3 header to patch
+  * Add forwarded field to patch
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 13 May 2025 14:54:15 +0200
+
+ansible-core (2.19.0~beta2-1) unstable; urgency=medium
+
+  * New upstream version 2.19.0~beta2
+  * Update watch file to track beta and rc releases
+  * Drop patch fixing tests (PR85007, applied upstream)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 24 Apr 2025 12:55:06 +0200
+
+ansible-core (2.19.0~beta1-2) unstable; urgency=medium
+
+  * Update d/copyright
+  * Fix test_range_templating on 32-bit architectures
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 17 Apr 2025 13:40:39 +0200
+
+ansible-core (2.19.0~beta1-1) unstable; urgency=high
+
+  * New upstream version 2.19.0~beta1
+  * Update quilt patch meta-data
+  * Update use-py3 quilt patch
+  * Update lintian overrides
+  * Mark ssh_agent integration test as requiring ssh
+  * Add missing depends on paramiko unit test
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 15 Apr 2025 19:01:32 +0200
+
+ansible-core (2.19~pre20250510~5347d4d4fc-1) unstable; urgency=high
+
+  * New upstream version 2.19~pre20250510~5347d4d4fc
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 10 Apr 2025 16:37:56 +0200
+
+ansible-core (2.19~pre20250506~462affa7c4-1) unstable; urgency=medium
+
+  * New upstream version 2.19~pre20250506~462affa7c4
+  * Package pre-release version of ansible 2.19, which should have the first
+    beta release in a few days. This is because 2.19 will have longer upstream
+    security support than 2.18, and 2.19 should release before trixie.
+  * Drop patches (applied upstream)
+    - Bump-ansible-galaxy-s-resolvelib-requirement-upperbo.patch
+    - test-git-archive-prefix-32-bit.patch
+    - upstream_PR84377.patch
+    - upstream_PR84378.patch
+    - upstream_PR84379.patch
+    - upstream_PR84409.patch
+    - upstream_PR84482.patch
+    - upstream_PR84486.patch
+  * Bump Standards-Version (no changes needed)
+  * Update integration test exceptions
+  * Update d/copyright to make lintian happy
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 09 Apr 2025 17:15:41 +0200
+
 ansible-core (2.18.3-1) unstable; urgency=medium
 
   * New upstream release

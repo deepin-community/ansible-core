@@ -37,44 +37,6 @@ Last-Update: 2024-11-11
  
  # Copyright: (c) 2020, Ansible Project
  # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
---- a/test/integration/targets/blocks/runme.sh
-+++ b/test/integration/targets/blocks/runme.sh
-@@ -9,7 +9,7 @@
- rm -f block_test.out
- # run the test and check to make sure the right number of completions was logged
- ansible-playbook -vv main.yml -i ../../inventory | tee block_test.out
--env python -c \
-+env python3 -c \
-     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
-     <block_test.out >block_test_wo_colors.out
- [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
-@@ -17,7 +17,7 @@
- rm -f block_test.out block_test_wo_colors.out
- # run test with free strategy and again count the completions
- ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=free | tee block_test.out
--env python -c \
-+env python3 -c \
-     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
-     <block_test.out >block_test_wo_colors.out
- [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
-@@ -25,7 +25,7 @@
- rm -f block_test.out block_test_wo_colors.out
- # run test with host_pinned strategy and again count the completions
- ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=host_pinned | tee block_test.out
--env python -c \
-+env python3 -c \
-     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
-     <block_test.out >block_test_wo_colors.out
- [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
-@@ -33,7 +33,7 @@
- # run test that includes tasks that fail inside a block with always
- rm -f block_test.out block_test_wo_colors.out
- ansible-playbook -vv block_fail.yml -i ../../inventory | tee block_test.out
--env python -c \
-+env python3 -c \
-     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
-     <block_test.out >block_test_wo_colors.out
- [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
 --- a/test/integration/targets/builtin_vars_prompt/test-vars_prompt.py
 +++ b/test/integration/targets/builtin_vars_prompt/test-vars_prompt.py
 @@ -1,4 +1,4 @@
@@ -145,23 +107,6 @@ Last-Update: 2024-11-11
  
  from __future__ import annotations
  
---- a/test/integration/targets/plugin_config_for_inventory/runme.sh
-+++ b/test/integration/targets/plugin_config_for_inventory/runme.sh
-@@ -7,12 +7,12 @@
- 
- # check default values
- ansible-inventory --list -i ./config_without_parameter.yml --export | \
--    env python -c "import json, sys; inv = json.loads(sys.stdin.read()); \
-+    env python3 -c "import json, sys; inv = json.loads(sys.stdin.read()); \
-                    assert set(inv['_meta']['hostvars']['test_host']['departments']) == set(['seine-et-marne', 'haute-garonne'])"
- 
- # check values
- ansible-inventory --list -i ./config_with_parameter.yml --export | \
--    env python -c "import json, sys; inv = json.loads(sys.stdin.read()); \
-+    env python3 -c "import json, sys; inv = json.loads(sys.stdin.read()); \
-                    assert set(inv['_meta']['hostvars']['test_host']['departments']) == set(['paris'])"
- 
- export ANSIBLE_CACHE_PLUGINS=cache_plugins/
 --- a/test/integration/targets/service/files/ansible_test_service.py
 +++ b/test/integration/targets/service/files/ansible_test_service.py
 @@ -1,4 +1,4 @@
@@ -276,7 +221,7 @@ Last-Update: 2024-11-11
  # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 --- a/lib/ansible/plugins/inventory/script.py
 +++ b/lib/ansible/plugins/inventory/script.py
-@@ -73,7 +73,7 @@
+@@ -75,7 +75,7 @@
  
  ### python example with ini config
  
@@ -436,4 +381,58 @@ Last-Update: 2024-11-11
 +#!/usr/bin/env python3
  # PYTHON_ARGCOMPLETE_OK
  """Command line entry point for ansible-test."""
+ 
+--- a/test/integration/targets/blocks/runme.sh
++++ b/test/integration/targets/blocks/runme.sh
+@@ -9,7 +9,7 @@
+ rm -f block_test.out
+ # run the test and check to make sure the right number of completions was logged
+ ansible-playbook -vv main.yml -i ../../inventory | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub(r"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -17,7 +17,7 @@
+ rm -f block_test.out block_test_wo_colors.out
+ # run test with free strategy and again count the completions
+ ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=free | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub(r"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -25,7 +25,7 @@
+ rm -f block_test.out block_test_wo_colors.out
+ # run test with host_pinned strategy and again count the completions
+ ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=host_pinned | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub(r"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -33,7 +33,7 @@
+ # run test that includes tasks that fail inside a block with always
+ rm -f block_test.out block_test_wo_colors.out
+ ansible-playbook -vv block_fail.yml -i ../../inventory | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub(r"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+--- a/test/integration/targets/inventory_script/script_inventory_fixture.py
++++ b/test/integration/targets/inventory_script/script_inventory_fixture.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/playbook_output_validator/filter.py
++++ b/test/integration/targets/playbook_output_validator/filter.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
  

@@ -10,7 +10,6 @@ from ansible.cli import CLI
 
 import os
 import shlex
-import subprocess
 import sys
 import yaml
 
@@ -21,10 +20,10 @@ import ansible.plugins.loader as plugin_loader
 
 from ansible import constants as C
 from ansible.cli.arguments import option_helpers as opt_help
-from ansible.config.manager import ConfigManager, Setting
+from ansible.config.manager import ConfigManager
 from ansible.errors import AnsibleError, AnsibleOptionsError, AnsibleRequiredOptionError
 from ansible.module_utils.common.text.converters import to_native, to_text, to_bytes
-from ansible.module_utils.common.json import json_dump
+from ansible._internal import _json
 from ansible.module_utils.six import string_types
 from ansible.parsing.quoting import is_quoted
 from ansible.parsing.yaml.dumper import AnsibleDumper
@@ -47,14 +46,14 @@ def yaml_short(data):
 
 
 def get_constants():
-    ''' helper method to ensure we can template based on existing constants '''
+    """ helper method to ensure we can template based on existing constants """
     if not hasattr(get_constants, 'cvars'):
         get_constants.cvars = {k: getattr(C, k) for k in dir(C) if not k.startswith('__')}
     return get_constants.cvars
 
 
 def _ansible_env_vars(varname):
-    ''' return true or false depending if variable name is possibly a 'configurable' ansible env variable '''
+    """ return true or false depending if variable name is possibly a 'configurable' ansible env variable """
     return all(
         [
             varname.startswith("ANSIBLE_"),
@@ -178,8 +177,6 @@ class ConfigCLI(CLI):
             except Exception:
                 if context.CLIARGS['action'] in ['view']:
                     raise
-                elif context.CLIARGS['action'] in ['edit', 'update']:
-                    display.warning("File does not exist, used empty file: %s" % self.config_file)
 
         elif context.CLIARGS['action'] == 'view':
             raise AnsibleError('Invalid or no config file was supplied')
@@ -187,53 +184,15 @@ class ConfigCLI(CLI):
         # run the requested action
         context.CLIARGS['func']()
 
-    def execute_update(self):
-        '''
-        Updates a single setting in the specified ansible.cfg
-        '''
-        raise AnsibleError("Option not implemented yet")
-
-        # pylint: disable=unreachable
-        if context.CLIARGS['setting'] is None:
-            raise AnsibleOptionsError("update option requires a setting to update")
-
-        (entry, value) = context.CLIARGS['setting'].split('=')
-        if '.' in entry:
-            (section, option) = entry.split('.')
-        else:
-            section = 'defaults'
-            option = entry
-        subprocess.call([
-            'ansible',
-            '-m', 'ini_file',
-            'localhost',
-            '-c', 'local',
-            '-a', '"dest=%s section=%s option=%s value=%s backup=yes"' % (self.config_file, section, option, value)
-        ])
-
     def execute_view(self):
-        '''
+        """
         Displays the current config file
-        '''
+        """
         try:
             with open(self.config_file, 'rb') as f:
                 self.pager(to_text(f.read(), errors='surrogate_or_strict'))
         except Exception as e:
             raise AnsibleError("Failed to open config file: %s" % to_native(e))
-
-    def execute_edit(self):
-        '''
-        Opens ansible.cfg in the default EDITOR
-        '''
-        raise AnsibleError("Option not implemented yet")
-
-        # pylint: disable=unreachable
-        try:
-            editor = shlex.split(C.config.get_config_value('EDITOR'))
-            editor.append(self.config_file)
-            subprocess.call(editor)
-        except Exception as e:
-            raise AnsibleError("Failed to open editor: %s" % to_native(e))
 
     def _list_plugin_settings(self, ptype, plugins=None):
         entries = {}
@@ -266,9 +225,9 @@ class ConfigCLI(CLI):
         return entries
 
     def _list_entries_from_args(self):
-        '''
+        """
         build a dict with the list requested configs
-        '''
+        """
 
         config_entries = {}
         if context.CLIARGS['type'] in ('base', 'all'):
@@ -294,15 +253,15 @@ class ConfigCLI(CLI):
         return config_entries
 
     def execute_list(self):
-        '''
+        """
         list and output available configs
-        '''
+        """
 
         config_entries = self._list_entries_from_args()
         if context.CLIARGS['format'] == 'yaml':
             output = yaml_dump(config_entries)
         elif context.CLIARGS['format'] == 'json':
-            output = json_dump(config_entries)
+            output = _json.json_dumps_formatted(config_entries)
 
         self.pager(to_text(output, errors='surrogate_or_strict'))
 
@@ -458,21 +417,21 @@ class ConfigCLI(CLI):
 
         entries = []
         for setting in sorted(config):
-            changed = (config[setting].origin not in ('default', 'REQUIRED') and setting not in _IGNORE_CHANGED)
+            changed = (config[setting]['origin'] not in ('default', 'REQUIRED') and setting not in _IGNORE_CHANGED)
 
             if context.CLIARGS['format'] == 'display':
-                if isinstance(config[setting], Setting):
+                if isinstance(config[setting], dict):
                     # proceed normally
-                    value = config[setting].value
-                    if config[setting].origin == 'default' or setting in _IGNORE_CHANGED:
+                    value = config[setting]['value']
+                    if config[setting]['origin'] == 'default' or setting in _IGNORE_CHANGED:
                         color = 'green'
                         value = self.config.template_default(value, get_constants())
-                    elif config[setting].origin == 'REQUIRED':
+                    elif config[setting]['origin'] == 'REQUIRED':
                         # should include '_terms', '_input', etc
                         color = 'red'
                     else:
                         color = 'yellow'
-                    msg = "%s(%s) = %s" % (setting, config[setting].origin, value)
+                    msg = "%s(%s) = %s" % (setting, config[setting]['origin'], value)
                 else:
                     color = 'green'
                     msg = "%s(%s) = %s" % (setting, 'default', config[setting].get('default'))
@@ -480,10 +439,10 @@ class ConfigCLI(CLI):
                 entry = stringc(msg, color)
             else:
                 entry = {}
-                for key in config[setting]._fields:
+                for key in config[setting].keys():
                     if key == 'type':
                         continue
-                    entry[key] = getattr(config[setting], key)
+                    entry[key] = config[setting][key]
 
             if not context.CLIARGS['only_changed'] or changed:
                 entries.append(entry)
@@ -495,11 +454,17 @@ class ConfigCLI(CLI):
         # Add base
         config = self.config.get_configuration_definitions(ignore_private=True)
         # convert to settings
+        settings = {}
         for setting in config.keys():
             v, o = C.config.get_config_value_and_origin(setting, cfile=self.config_file, variables=get_constants())
-            config[setting] = Setting(setting, v, o, None)
+            settings[setting] = {
+                'name': setting,
+                'value': v,
+                'origin': o,
+                'type': None
+            }
 
-        return self._render_settings(config)
+        return self._render_settings(settings)
 
     def _get_plugin_configs(self, ptype, plugins):
 
@@ -554,7 +519,12 @@ class ConfigCLI(CLI):
                     # not all cases will be error
                     o = 'REQUIRED'
 
-                config_entries[finalname][setting] = Setting(setting, v, o, None)
+                config_entries[finalname][setting] = {
+                    'name': setting,
+                    'value': v,
+                    'origin': o,
+                    'type': None
+                }
 
             # pretty please!
             results = self._render_settings(config_entries[finalname])
@@ -587,7 +557,12 @@ class ConfigCLI(CLI):
                 if v is None and o is None:
                     # not all cases will be error
                     o = 'REQUIRED'
-                server_config[setting] = Setting(setting, v, o, None)
+                server_config[setting] = {
+                    'name': setting,
+                    'value': v,
+                    'origin': o,
+                    'type': None
+                }
             if context.CLIARGS['format'] == 'display':
                 if not context.CLIARGS['only_changed'] or server_config:
                     equals = '=' * len(server)
@@ -599,9 +574,9 @@ class ConfigCLI(CLI):
         return output
 
     def execute_dump(self):
-        '''
+        """
         Shows the current settings, merges ansible.cfg if specified
-        '''
+        """
         output = []
         if context.CLIARGS['type'] in ('base', 'all'):
             # deal with base
@@ -617,7 +592,7 @@ class ConfigCLI(CLI):
                 for server_config in server_config_list:
                     server = list(server_config.keys())[0]
                     server_reduced_config = server_config.pop(server)
-                    configs[server] = server_reduced_config
+                    configs[server] = list(server_reduced_config.values())
                 output.append({'GALAXY_SERVERS': configs})
 
         if context.CLIARGS['type'] == 'all':
@@ -644,7 +619,7 @@ class ConfigCLI(CLI):
         if context.CLIARGS['format'] == 'yaml':
             text = yaml_dump(output)
         elif context.CLIARGS['format'] == 'json':
-            text = json_dump(output)
+            text = _json.json_dumps_formatted(output)
 
         self.pager(to_text(text, errors='surrogate_or_strict'))
 

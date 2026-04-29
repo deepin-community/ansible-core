@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: raw
 short_description: Executes a low-down and dirty command
@@ -70,11 +70,11 @@ seealso:
 author:
     - Ansible Core Team
     - Michael DeHaan
-'''
+"""
 
-EXAMPLES = r'''
-- name: Bootstrap a host without python2 installed
-  ansible.builtin.raw: dnf install -y python2 python2-dnf libselinux-python
+EXAMPLES = r"""
+- name: Bootstrap a host without Python installed
+  ansible.builtin.raw: dnf install -y python3 python3-libdnf
 
 - name: Run a command that uses non-posix shell-isms (in this example /bin/sh doesn't handle redirection and wildcards together but bash does)
   ansible.builtin.raw: cat < /tmp/*txt
@@ -86,4 +86,4 @@ EXAMPLES = r'''
 
 - name: List user accounts on a Windows system
   ansible.builtin.raw: Get-WmiObject -Class Win32_UserAccount
-'''
+"""

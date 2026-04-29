@@ -1,4 +1,7 @@
 version=4
-opts=dversionmangle=s/\+dfsg//,repacksuffix=+dfsg \
-https://pypi.debian.net/ansible-core/ ansible[-_]core-([0-9]+\.[0-9]+\.[0-9]+).tar.gz
-
+opts="\
+  dversionmangle=s/\+dfsg//, \
+  repacksuffix=+dfsg, \
+  uversionmangle=s/((?:a|b|rc)[0-9]+)$/~$1/;s/a/alpha/;s/b/beta/, \
+" \
+https://pypi.debian.net/ansible-core/ ansible[-_]core-(2\.19\.[0-9]+).tar.gz

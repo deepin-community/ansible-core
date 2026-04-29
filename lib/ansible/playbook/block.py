@@ -17,8 +17,8 @@
 
 from __future__ import annotations
 
-import ansible.constants as C
 from ansible.errors import AnsibleParserError
+from ansible.module_utils.common.sentinel import Sentinel
 from ansible.playbook.attribute import NonInheritableFieldAttribute
 from ansible.playbook.base import Base
 from ansible.playbook.conditional import Conditional
@@ -28,7 +28,6 @@ from ansible.playbook.helpers import load_list_of_tasks
 from ansible.playbook.notifiable import Notifiable
 from ansible.playbook.role import Role
 from ansible.playbook.taggable import Taggable
-from ansible.utils.sentinel import Sentinel
 
 
 class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatable):
@@ -61,18 +60,18 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         return "BLOCK(uuid=%s)(id=%s)(parent=%s)" % (self._uuid, id(self), self._parent)
 
     def __eq__(self, other):
-        '''object comparison based on _uuid'''
+        """object comparison based on _uuid"""
         return self._uuid == other._uuid
 
     def __ne__(self, other):
-        '''object comparison based on _uuid'''
+        """object comparison based on _uuid"""
         return self._uuid != other._uuid
 
     def get_vars(self):
-        '''
+        """
         Blocks do not store variables directly, however they may be a member
         of a role or task include which does, so return those if present.
-        '''
+        """
 
         all_vars = {}
 
@@ -100,10 +99,10 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         return is_block
 
     def preprocess_data(self, ds):
-        '''
+        """
         If a simple task is given, an implicit block for that single task
         is created, which goes in the main portion of the block
-        '''
+        """
 
         if not Block.is_block(ds):
             if isinstance(ds, list):
@@ -112,6 +111,8 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                 return super(Block, self).preprocess_data(dict(block=[ds]))
 
         return super(Block, self).preprocess_data(ds)
+
+    # FIXME: these do nothing but augment the exception message; DRY and nuke
 
     def _load_block(self, attr, ds):
         try:
@@ -125,8 +126,8 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                 loader=self._loader,
                 use_handlers=self._use_handlers,
             )
-        except AssertionError as e:
-            raise AnsibleParserError("A malformed block was encountered while loading a block", obj=self._ds, orig_exc=e)
+        except AssertionError as ex:
+            raise AnsibleParserError("A malformed block was encountered while loading a block", obj=self._ds) from ex
 
     def _load_rescue(self, attr, ds):
         try:
@@ -140,8 +141,8 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                 loader=self._loader,
                 use_handlers=self._use_handlers,
             )
-        except AssertionError as e:
-            raise AnsibleParserError("A malformed block was encountered while loading rescue.", obj=self._ds, orig_exc=e)
+        except AssertionError as ex:
+            raise AnsibleParserError("A malformed block was encountered while loading rescue.", obj=self._ds) from ex
 
     def _load_always(self, attr, ds):
         try:
@@ -155,8 +156,8 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                 loader=self._loader,
                 use_handlers=self._use_handlers,
             )
-        except AssertionError as e:
-            raise AnsibleParserError("A malformed block was encountered while loading always", obj=self._ds, orig_exc=e)
+        except AssertionError as ex:
+            raise AnsibleParserError("A malformed block was encountered while loading always", obj=self._ds) from ex
 
     def _validate_always(self, attr, name, value):
         if value and not self.block:
@@ -177,7 +178,7 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         def _dupe_task_list(task_list, new_block):
             new_task_list = []
             for task in task_list:
-                new_task = task.copy(exclude_parent=True)
+                new_task = task.copy(exclude_parent=True, exclude_tasks=exclude_tasks)
                 if task._parent:
                     new_task._parent = task._parent.copy(exclude_tasks=True)
                     if task._parent == new_block:
@@ -219,10 +220,10 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         return new_me
 
     def serialize(self):
-        '''
+        """
         Override of the default serialize method, since when we're serializing
         a task we don't want to include the attribute list of tasks.
-        '''
+        """
 
         data = dict()
         for attr in self.fattributes:
@@ -240,10 +241,10 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         return data
 
     def deserialize(self, data):
-        '''
+        """
         Override of the default deserialize method, to match the above overridden
         serialize method
-        '''
+        """
 
         # import is here to avoid import loops
         from ansible.playbook.task_include import TaskInclude
@@ -290,9 +291,9 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                 dep.set_loader(loader)
 
     def _get_parent_attribute(self, attr, omit=False):
-        '''
+        """
         Generic logic to get the attribute or parent attribute for a block value.
-        '''
+        """
         fattr = self.fattributes[attr]
 
         extend = fattr.extend
@@ -363,9 +364,9 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
         return value
 
     def filter_tagged_tasks(self, all_vars):
-        '''
+        """
         Creates a new block, with task lists filtered based on the tags.
-        '''
+        """
 
         def evaluate_and_append_task(target):
             tmp_list = []
@@ -374,8 +375,7 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
                     filtered_block = evaluate_block(task)
                     if filtered_block.has_tasks():
                         tmp_list.append(filtered_block)
-                elif ((task.action in C._ACTION_META and task.implicit) or
-                        task.evaluate_tags(self._play.only_tags, self._play.skip_tags, all_vars=all_vars)):
+                elif task.evaluate_tags(self._play.only_tags, self._play.skip_tags, all_vars=all_vars):
                     tmp_list.append(task)
             return tmp_list
 
@@ -417,12 +417,12 @@ class Block(Base, Conditional, CollectionSearch, Taggable, Notifiable, Delegatab
             return dict()
 
     def all_parents_static(self):
-        '''
+        """
         Determine if all of the parents of this block were statically loaded
         or not. Since Task/TaskInclude objects may be in the chain, they simply
         call their parents all_parents_static() method. Only Block objects in
         the chain check the statically_loaded value of the parent.
-        '''
+        """
         from ansible.playbook.task_include import TaskInclude
         if self._parent:
             if isinstance(self._parent, TaskInclude) and not self._parent.statically_loaded:

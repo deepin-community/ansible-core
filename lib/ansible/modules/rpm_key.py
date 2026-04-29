@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: rpm_key
 author:
@@ -52,9 +52,9 @@ attributes:
         support: none
     platform:
         platforms: rhel
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Import a key from a url
   ansible.builtin.rpm_key:
     state: present
@@ -81,9 +81,9 @@ EXAMPLES = '''
     fingerprint:
       - EBC6 E12C 62B1 C734 026B  2122 A20E 5214 6B8D 79E6
       - 19B7 913E 6284 8E3F 4D78 D6B4 ECD9 1AB2 2EB6 8D86
-'''
+"""
 
-RETURN = r'''#'''
+RETURN = r"""#"""
 
 import re
 import os.path
@@ -172,9 +172,8 @@ class RpmKey(object):
             self.module.fail_json(msg="Not a public key: %s" % url)
         tmpfd, tmpname = tempfile.mkstemp()
         self.module.add_cleanup_file(tmpname)
-        tmpfile = os.fdopen(tmpfd, "w+b")
-        tmpfile.write(key)
-        tmpfile.close()
+        with os.fdopen(tmpfd, "w+b") as tmpfile:
+            tmpfile.write(key)
         return tmpname
 
     def normalize_keyid(self, keyid):
