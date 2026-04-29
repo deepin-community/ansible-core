@@ -1,0 +1,11 @@
+use-py3.patch
+test-git-archive-prefix-32-bit.patch
+Bump-ansible-galaxy-s-resolvelib-requirement-upperbo.patch
+upstream_PR84377.patch
+upstream_PR84378.patch
+upstream_PR84379.patch
+fix-integration-tests.patch
+upstream_PR84482.patch
+upstream_PR84486.patch
+upstream_PR84487.patch
+upstream_PR84409.patch

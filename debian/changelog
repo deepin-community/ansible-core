@@ -1,5 +1,392 @@
-template-repository (1.0-1) unstable; urgency=medium
+ansible-core (2.18.3-1) unstable; urgency=medium
 
-  * Initial release
+  * New upstream release
+  * d/t/control: Add dep to ssh
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 25 Feb 2025 18:23:04 +0100
+
+ansible-core (2.18.1-4) unstable; urgency=medium
+
+  * Fix autopkgtest failure on i386. Thanks, Stefano!
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sat, 28 Dec 2024 17:29:53 +0100
+
+ansible-core (2.18.1-3) unstable; urgency=medium
+
+  * Skip testbed setup when in dry run mode
+  * integration tests: read root requirements from test
+  * Fix several integration tests
+  * Run autopkgtests on VMs instead of containers
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 25 Dec 2024 10:33:42 +0100
+
+ansible-core (2.18.1-2) unstable; urgency=medium
+
+  * Minor fix for ci.debian.net
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sat, 21 Dec 2024 14:30:19 +0100
+
+ansible-core (2.18.1-1) unstable; urgency=medium
+
+  * New upstream version 2.18.1
+  * Drop CVE-2024-11079 patch (applied upstream)
+  * Make less autopkgtests fail that use git in some form
+  * Update autopkgtest dependencies
+  * Remove py3 shebang which caused ansible-test-sanity-shebang to fail
+  * Update list of integration tests requiring root
+  * Skip certain failing integration tests
+  * autopkgtest: Preserve PYTHONPATH env when using sudo
+  * Fix many CI tests to run on Debian sid as unprivileged user
+  * Update testbed-setup.sh to make tests pass
+  * Add workaround for copy integration test
+  * unbreak pip for integration tests
+  * Add debug/fix code for common permission errors
+  * autopkgtests: Add workaround for missing VERSION_ID in /etc/os-release
+  * d/t/ansible-test-integration.py: Show which tests would be run
+  * Replace PR83844 patch with three smaller ones
+  * Fix integration tests mount_facts, unarchive, user
+  * Fix homedir permission in user module (and test)
+  * Mark several integration tests as broken
+  * Update lintian overrides
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 20 Dec 2024 19:33:03 +0100
+
+ansible-core (2.18.0-2) unstable; urgency=medium
+
+  * Team upload
+  * Fix CVE-2024-11079: This vulnerability allows attackers
+    to bypass unsafe content protections using the
+    hostvars object to reference and execute templated content.
+    This issue can lead to arbitrary code execution if remote
+    data or module outputs are improperly templated within playbooks
+    (Closes: #1088106).
+
+ -- Bastien Roucariès <rouca@debian.org>  Sat, 30 Nov 2024 17:21:42 +0000
+
+ansible-core (2.18.0-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Bastien Roucariès ]
+  * Fix CVE-2024-9902: A flaw was found in Ansible.
+    The ansible-core `user` module can allow an
+    unprivileged user to silently create or replace
+    the contents of any file on any system path
+    and take ownership of it when a privileged user
+    executes the `user` module against the unprivileged
+    user's home directory. If the unprivileged user
+    has traversal permissions on the directory containing
+    the exploited target file, they retain full control
+    over the contents of the file as its owner.
+
+  [ Colin Watson ]
+  * New upstream release.
+  * Remove misleading sequence numbers from files in debian/patches.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 11 Nov 2024 15:02:45 +0000
+
+ansible-core (2.17.5-5) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Bastien Roucariès ]
+  * Fix CVE-2024-8775: A flaw was found in Ansible,
+    where sensitive information stored in Ansible Vault
+    files can be exposed in plaintext during the execution
+    of a playbook. This occurs when using tasks such as
+    include_vars to load vaulted variables without
+    setting the no_log: true parameter, resulting in
+    sensitive data being printed in the playbook output
+    or logs. This can lead to the unintentional disclosure
+    of secrets like passwords or API keys, compromising
+    security and potentially allowing unauthorized
+    access or actions.
+    (Closes: #1082851)
+  * Bump resolvelib dependency to << 1.2 (Closes: #1086551)
+
+  [ Colin Watson ]
+  * Disable a few tests until https://pypi.org/project/ansible-core/ is
+    updated with upstream's resolvelib dependency change.
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 07 Nov 2024 16:36:31 +0000
+
+ansible-core (2.17.5-4) unstable; urgency=medium
+
+  * Team upload.
+  * Make autopkgtests depend on libffi-dev, needed to install cffi from PyPI
+    on some architectures.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 28 Oct 2024 15:58:59 +0000
+
+ansible-core (2.17.5-3) unstable; urgency=medium
+
+  * Team upload.
+  * Make autopkgtests depend on libssl-dev and pkg-config, needed to install
+    cryptography from PyPI on some architectures.
+  * Make autopkgtests depend on libyaml-dev, needed to install PyYAML from
+    PyPI on some architectures.
+  * Make autopkgtests depend on python3-dev, needed to install cffi from
+    PyPI on some architectures.
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 27 Oct 2024 23:40:22 +0000
+
+ansible-core (2.17.5-2) unstable; urgency=medium
+
+  * Team upload.
+  * test: Make git archive prefix fit in 32-bit ssize_t.
+  * Make autopkgtests depend on cargo and gcc, needed to install
+    cryptography and cffi from PyPI on some architectures.
+  * Skip binary_modules_linux integration test except on amd64/ppc64el.
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 16 Oct 2024 18:29:18 +0100
+
+ansible-core (2.17.5-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release:
+    - copy module now updates mtime/atime (closes: #1078779).
+  * Skip "raw" integration test, since it requires su (closes: #1079672).
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 16 Oct 2024 01:57:21 +0100
+
+ansible-core (2.17.3-1) unstable; urgency=medium
+
+  * New upstream version 2.17.3
+  * Disable some tests on CI that time out
+  * Updates to autopkgtests
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 13 Aug 2024 14:14:20 +0200
+
+ansible-core (2.17.2-1) unstable; urgency=medium
+
+  * New upstream version 2.17.2
+  * Add integration tests to autopkgtest
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 26 Jul 2024 02:07:36 +0200
+
+ansible-core (2.17.1-1) unstable; urgency=medium
+
+  * New upstream version 2.17.1
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 25 Jun 2024 12:48:41 +0200
+
+ansible-core (2.17.0-1) unstable; urgency=medium
+
+  * New upstream version 2.17.0
+  * d/control: Update VCS links after moving package to python-team
+  * Remove trailing whitespace
+  * Refresh patches
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 05 Jun 2024 14:59:38 +0200
+
+ansible-core (2.16.6-1) unstable; urgency=medium
+
+  [ Alexandre Detiste ]
+  * remove stale dependency on python3-mock
+
+  [ Lee Garrett ]
+  * d/gbp.conf: Sign tags by default
+  * Update watch file to accomodate a common upstream typo
+  * New upstream version 2.16.6
+  * Bump recommended ansible version to 9.5.1
+  * Bump Standards-Version (no changes needed)
+  * autopkgtests: Add dep to python3-systemd
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 25 Apr 2024 00:36:22 +0200
+
+ansible-core (2.16.5-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #1057640)
+    - ansible-test supports python 3.12 now (Closes: #1061782, #1061781)
+    - fixes CVE-2024-0690 (Closes: #1061156)
+  * Drop dependency on python3-distutils (Closes: #1065826)
+  * Drop patches applied upstream
+  * Refreshen patches
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 17 Apr 2024 23:47:08 +0200
+
+ansible-core (2.14.13-1) unstable; urgency=medium
+
+  * New upstream version 2.14.13
+  * Update package to conform to DEP-14 packaging layout
+  * Update dep3 patch headers
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 12 Dec 2023 11:20:17 +0100
+
+ansible-core (2.14.11-2) unstable; urgency=medium
+
+  * Enforce locale to ensure it builds reproducibly
+  * Fix facter when puppet not present (Closes: #1055616)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 10 Nov 2023 13:50:13 +0100
+
+ansible-core (2.14.11-1) unstable; urgency=medium
+
+  * New upstream version 2.14.11
+  * Fix galaxy tests
+  * Fix lintian override
+  * Update changelog and release to unstable
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 20 Oct 2023 19:41:09 +0200
+
+ansible-core (2.14.10-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 12 Sep 2023 12:27:50 +0200
+
+ansible-core (2.14.9-2) unstable; urgency=medium
+
+  * Fix unit tests
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sat, 19 Aug 2023 02:16:32 +0200
+
+ansible-core (2.14.9-1) unstable; urgency=medium
+
+  * New upstream version 2.14.9
+  * Refresh patches
+  * Adapt to upstream change of man page building
+  * Fix double-build failure (Closes: #1043680)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 18 Aug 2023 23:56:27 +0200
+
+ansible-core (2.14.8-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 18 Jul 2023 13:24:30 +0200
+
+ansible-core (2.14.7-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh 0005-use-py3.patch
+  * Drop 0010-fix-json-uri-subtype.patch (applied upstream)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Mon, 17 Jul 2023 15:26:13 +0200
+
+ansible-core (2.14.6-1) unstable; urgency=medium
+
+  * New upstream release
+  * d/watch: Remove signature check
+  * d/control: Recommend python3-passlib (Closes: #1034251)
+  * d/control: Update python3-resolvelib version dependency (Closes: #1037932, #1037443)
+  * uri: fix search for json types to include strings in the format xxx/yyy+json
+    (Closes: #1037126)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Fri, 16 Jun 2023 16:13:27 +0200
+
+ansible-core (2.14.3-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 01 Mar 2023 21:06:21 +0100
+
+ansible-core (2.14.2-1) unstable; urgency=medium
+
+  * Bump Standards-Version (no changes needed)
+  * New upstream version 2.14.2
+  * Acknowledge previous NMU.
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 31 Jan 2023 13:11:22 +0100
+
+ansible-core (2.14.1-2) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Steve Langasek ]
+  * Drop superfluous --python 3.10 in autopkgtest (Closes: #1028405)
+
+ -- Jochen Sprickerhof <jspricke@debian.org>  Mon, 16 Jan 2023 10:14:20 +0100
+
+ansible-core (2.14.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * autopkgtest: Depend on python3-pytest-forked (Closes: #1025335)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 13 Dec 2022 16:17:44 +0100
+
+ansible-core (2.14.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Use PEP517 build process (Closes: #1024705)
+  * Tighten resolvelib dependency (Closes: #1010345)
+  * Tighten python3 and pyyaml dependencies
+  * Fix autopkgtests (Closes: #1024713)
+  * Remove 0007-use-C.UTF-8.patch (fixed upstream)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 29 Nov 2022 01:55:18 +0100
+
+ansible-core (2.13.4-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 13 Sep 2022 16:41:09 +0200
+
+ansible-core (2.13.3-1) unstable; urgency=medium
+
+  * New upstream release 2.13.3
+  * Remove patch to preserve debian dir
+  * Refresh Debian patches
+  * Correctly build man pages
+  * Update Build-Depends
+  * Bump jinja2 requirements
+  * Run autopkgtests against python 3.10
+  * support for newer resolvelib (Closes: #1007907)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 07 Sep 2022 18:05:59 +0200
+
+ansible-core (2.12.4-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Lee Garrett <debian@rocketjump.eu>  Tue, 29 Mar 2022 17:10:19 +0200
+
+ansible-core (2.12.3-1) unstable; urgency=medium
+
+  * New upstream release
+  * Switch build-dep from python3-all to python3 (Closes: #1001040)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sun, 06 Mar 2022 18:39:56 +0100
+
+ansible-core (2.12.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Upload to unstable.
+  * Drop 0006-use-Cryptodome.patch (fixed upstream)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Thu, 18 Nov 2021 13:42:31 +0100
+
+ansible-core (2.11.6-1) experimental; urgency=medium
+
+  * New upstream release (Closes: #977327)
+  * Rename source/binary package to ansible-core
+  * Upload to experimental (Closes: #995879)
+  * Fix issues with 0005_use_py3.patch (Closes: #992107)
+  * Fix usage of Cryptodome
+  * Fix all unit tests
+  * Bump Standards-Version to 4.6.0.1 (no changes needed)
+  * Fix several lintian warnings
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sun, 07 Nov 2021 00:40:26 +0100
+
+ansible-base (2.10.5+dfsg-2) experimental; urgency=medium
+
+  * Enable autopkgtests.
+  * Fix python interpreter detection (Closes: #983140)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Mon, 22 Mar 2021 22:41:46 +0100
+
+ansible-base (2.10.5+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Upload to unstable.
+
+ -- Lee Garrett <debian@rocketjump.eu>  Wed, 10 Feb 2021 01:09:15 +0100
+
+ansible-base (2.10.4-1) experimental; urgency=medium
+
+  * Initial packaging of ansible-base (split out at upstream from ansible)
+  * Switch from python3-crypto to python3-pycryptodome (Closes: #971309)
+  * Bump Standards-Version to 4.5.1 (no changes needed)
+
+ -- Lee Garrett <debian@rocketjump.eu>  Sat, 09 Jan 2021 23:14:43 +0100

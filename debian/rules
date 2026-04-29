@@ -1,4 +1,40 @@
 #!/usr/bin/make -f
 
+DOPACKAGES = $(shell dh_listpackages)
+export PYBUILD_DESTDIR=debian/tmp
+
+# Make it easier to build on machines with ansible << 2.10 installed.
+export ANSIBLE_SKIP_CONFLICT_CHECK=1
+
+# tmpdir is needed during docs build, as ~ isn't writeable in sbuild
+export ANSIBLE_LOCAL_TEMP=tmp/
+
+export LC_ALL=C.UTF-8
+
 %:
-	dh $@
+#	dh $@ --with python3,sphinxdoc --buildsystem=pybuild
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_clean:
+	dh_clean \
+		--exclude=test/units/inventory_test_data/group_vars/noparse/all.yml~ \
+		--exclude=test/integration/targets/collections/collection_root_user/ansible_collections/testns/testcoll/plugins/modules/uses_leaf_mu_flat_import.bak
+
+	# now not part of the package anymore
+	rm -Rf docs/man/
+
+execute_after_dh_auto_build:
+	# manpage documentation
+	mkdir -p docs/man/man1/
+	/usr/bin/python3 packaging/cli-doc/build.py man --output-dir docs/man/man1/
+ifneq (,$(filter ansible-doc,$(DOPACKAGES)))
+	# html documentation
+	$(MAKE) webdocs
+endif
+
+override_dh_auto_test:
+	# For now, disable the tests
+	#make tests-nonet
+
+override_dh_python3:
+	dh_python3 --shebang=/usr/bin/python3

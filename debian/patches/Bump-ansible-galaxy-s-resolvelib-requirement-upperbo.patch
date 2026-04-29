@@ -1,0 +1,85 @@
+From: s-hertel <19572925+s-hertel@users.noreply.github.com>
+Date: Fri, 1 Nov 2024 11:49:04 -0400
+Subject: Bump ansible-galaxy's resolvelib requirement upperbound to 1.2.0
+
+Test against the newest resolvelib release 1.1.0
+
+Only test the oldest supported resolvelib version, latest minor release,
+and releases that offer additional coverage
+
+origin: https://github.com/ansible/ansible/commit/d4085a56e00a6f9059e7df6e4a16eef4f5737501
+bug: https://github.com/ansible/ansible/issues/84217
+bug-debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1086551
+---
+ changelogs/fragments/update-resolvelib-lt-1_2_0.yml           |  2 ++
+ lib/ansible/galaxy/dependency_resolution/providers.py         |  2 +-
+ requirements.txt                                              |  2 +-
+ .../targets/ansible-galaxy-collection/vars/main.yml           | 11 +++++------
+ test/lib/ansible_test/_data/requirements/ansible.txt          |  2 +-
+ 5 files changed, 10 insertions(+), 9 deletions(-)
+ create mode 100644 changelogs/fragments/update-resolvelib-lt-1_2_0.yml
+
+diff --git a/changelogs/fragments/update-resolvelib-lt-1_2_0.yml b/changelogs/fragments/update-resolvelib-lt-1_2_0.yml
+new file mode 100644
+index 0000000..461f436
+--- /dev/null
++++ b/changelogs/fragments/update-resolvelib-lt-1_2_0.yml
+@@ -0,0 +1,2 @@
++minor_changes:
++  - ansible-galaxy - support ``resolvelib >= 0.5.3, < 1.2.0`` (https://github.com/ansible/ansible/issues/84217).
+diff --git a/lib/ansible/galaxy/dependency_resolution/providers.py b/lib/ansible/galaxy/dependency_resolution/providers.py
+index 7578cae..f0f30c9 100644
+--- a/lib/ansible/galaxy/dependency_resolution/providers.py
++++ b/lib/ansible/galaxy/dependency_resolution/providers.py
+@@ -39,7 +39,7 @@ except ImportError:
+ 
+ # TODO: add python requirements to ansible-test's ansible-core distribution info and remove the hardcoded lowerbound/upperbound fallback
+ RESOLVELIB_LOWERBOUND = SemanticVersion("0.5.3")
+-RESOLVELIB_UPPERBOUND = SemanticVersion("1.1.0")
++RESOLVELIB_UPPERBOUND = SemanticVersion("1.2.0")
+ RESOLVELIB_VERSION = SemanticVersion.from_loose_version(LooseVersion(resolvelib_version))
+ 
+ 
+diff --git a/requirements.txt b/requirements.txt
+index 5eaf9f2..e012617 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -12,4 +12,4 @@ packaging
+ # NOTE: Ref: https://github.com/sarugaku/resolvelib/issues/69
+ # NOTE: When updating the upper bound, also update the latest version used
+ # NOTE: in the ansible-galaxy-collection test suite.
+-resolvelib >= 0.5.3, < 1.1.0  # dependency resolver used by ansible-galaxy
++resolvelib >= 0.5.3, < 1.2.0  # dependency resolver used by ansible-galaxy
+diff --git a/test/integration/targets/ansible-galaxy-collection/vars/main.yml b/test/integration/targets/ansible-galaxy-collection/vars/main.yml
+index 066d267..abbc40c 100644
+--- a/test/integration/targets/ansible-galaxy-collection/vars/main.yml
++++ b/test/integration/targets/ansible-galaxy-collection/vars/main.yml
+@@ -4,13 +4,12 @@ gpg_homedir: "{{ galaxy_dir }}/gpg"
+ 
+ offline_server: https://test-hub.demolab.local/api/galaxy/content/api/
+ 
++# Test oldest and most recently supported, and versions with notable changes
+ supported_resolvelib_versions:
+-  - "0.5.3"  # Oldest supported
+-  - "0.6.0"
+-  - "0.7.0"
+-  - "0.8.0"
+-  - "0.9.0"
+-  - "1.0.1"
++  - "0.5.3"  # test CollectionDependencyProvider050
++  - "0.6.0"  # test CollectionDependencyProvider060
++  - "0.7.0"  # test CollectionDependencyProvider070
++  - "1.1.0"  # test CollectionDependencyProvider080
+ 
+ unsupported_resolvelib_versions:
+   - "0.2.0"  # Fails on import
+diff --git a/test/lib/ansible_test/_data/requirements/ansible.txt b/test/lib/ansible_test/_data/requirements/ansible.txt
+index 5eaf9f2..e012617 100644
+--- a/test/lib/ansible_test/_data/requirements/ansible.txt
++++ b/test/lib/ansible_test/_data/requirements/ansible.txt
+@@ -12,4 +12,4 @@ packaging
+ # NOTE: Ref: https://github.com/sarugaku/resolvelib/issues/69
+ # NOTE: When updating the upper bound, also update the latest version used
+ # NOTE: in the ansible-galaxy-collection test suite.
+-resolvelib >= 0.5.3, < 1.1.0  # dependency resolver used by ansible-galaxy
++resolvelib >= 0.5.3, < 1.2.0  # dependency resolver used by ansible-galaxy

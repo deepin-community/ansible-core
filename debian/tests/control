@@ -1,0 +1,119 @@
+Tests: unit
+# Dependencies sourced from:
+# - test/lib/ansible_test/_data/requirements/units.txt
+# - test/units/requirements.txt
+Depends: @,
+         git,
+         python3-cryptography,
+         python3-jinja2,
+         python3-passlib,
+         python3-pexpect,
+         python3-pytest,
+         python3-pytest-mock,
+         python3-pytest-forked,
+         python3-pytest-xdist,
+         python3-systemd,
+         python3-tz,
+         python3-winrm,
+         python3-yaml
+
+# integration tests that can run as unprivileged user + with sudo
+Test-Command: ./debian/tests/ansible-test-integration.py --default-tests --requires-apt-mark-manual --requires-root
+Features: test-name=ansible-test-integration-default
+Depends: @,
+         acl,                       # lineinfile integration test
+         apache2-utils,             # used by subversion integration test
+         bash,                      # Many scripts have bash shebangs
+         #bsdextrautils,
+         cargo,                     # needed to build cryptography on some architectures, which some tests install from PyPI
+         debconf-utils,             # debconf
+         equivs,                    # integration test "apt"
+         file,                      # stat
+         gcc,                       # needed to build cffi on some architectures, which some tests install from PyPI
+         git,                       # used by most tests
+         gnupg,                     # integration test apt_key
+         gzip,                      # integration test git
+         iptables,                  # integration test iptables
+         #iproute2,
+         libffi-dev,                # needed to build cffi on some architectures, which some tests install from PyPI
+         libfile-fcntllock-perl,    # integration test "apt"
+         libssl-dev,                # needed to build cryptography on some architectures, which some tests install from PyPI
+         libyaml-dev,               # needed to build PyYAML on some architectures, which some tests install from PyPI
+         locales,
+         lvm2,                      # integration test hardware_facts
+         openssh-server,            # integration test systemd enables/disables it
+         openssl,                   # integration test ansible-galaxy
+         pkg-config,                # needed to build cryptography on some architectures, which some tests install from PyPI
+         #procps,
+         python3-apt,               # needed for checking if packages are installed
+         #python3-cryptography,
+         python3-dev,               # needed to build cffi on some architectures, which some tests install from PyPI
+         python3-distlib,           # ansible-galaxy-collection-cli
+         #python3-jinja2,
+         #python3-junit.xml,
+         #python3-mock,
+         python3-passlib,            # grep 'setup/always/setup_passlib' test/integration/targets/*/aliases
+         python3-pexpect,            # grep 'setup/always/setup_pexpect' test/integration/targets/*/aliases
+         python3-pip,               # ansible-test-config, builtin_vars_prompt, remove again and fix tests
+         #python3-pycryptodome,
+         python3-pytest,            # ansible-test-units-assertions
+         python3-pytest-mock,       # ansible-test-units-assertions
+         #python3-pytest-xdist,
+         python3-setuptools,        # integration test "pip"
+         #python3-systemd,
+         #python3-tz,
+         python3-venv,              # ansible-inventory; ./test/lib/ansible_test/_util/target/injector/virtualenv.sh
+         python3-virtualenv,        # ansible-inventory, ansible-test-installed; ./test/lib/ansible_test/_util/target/injector/virtualenv.sh
+         #python3-winrm,
+         python3-yaml,              # ansible-test-units-forked
+         #pwsh,                      # ansible-test-sanity-validate-modules, see RFP bug https://bugs.debian.org/834756,
+         #rsync,
+         sudo,                      # needed for testbed-setup.sh
+         tar,                       # integration test git
+         unzip,                     # integration test git
+         zip,                       # integration test git
+Restrictions:
+  allow-stderr,     # lots of STDERR output
+  breaks-testbed,   # many tests add/delete files, or change the system in fundamental ways
+  isolation-machine, # lxc containers have problems with mounting loopback
+  needs-internet,   # used for ansible-galaxy and pip tests
+  needs-sudo,       # used to call testbed-setup.sh
+
+# integration tests that fail on some variation of running pip install
+Test-Command: ./debian/tests/ansible-test-integration.py --fails-on-pip
+Features: test-name=ansible-test-integration-fails-on-pip
+Depends: @,
+         git,
+         locales,
+         python3-passlib,            # grep 'setup/always/setup_passlib' test/integration/targets/*/aliases
+         python3-pexpect,            # grep 'setup/always/setup_pexpect' test/integration/targets/*/aliases
+         python3-pip,                # ansible-test-config, builtin_vars_prompt, remove again and fix tests
+Restrictions:
+  allow-stderr,     # lots of STDERR output
+  flaky,            # known to be broken
+  isolation-machine, # lxc containers have problems with mounting loopback
+  needs-internet,   # used for ansible-galaxy and pip tests
+  needs-sudo,       # used to call testbed-setup.sh
+  # don't run broken tests on CI, as that makes autopkgtest time out
+  # Run `autopkgtest --ignore-restrictions disabled-on-ci [...]` to run locally.
+  # Thanks elbrus for the tip!
+  disabled-on-ci,
+
+# integration tests that fail for other reasons
+Test-Command: ./debian/tests/ansible-test-integration.py --failing
+Features: test-name=ansible-test-integration-failing
+Depends: @,
+         git,
+         locales,
+         python3-passlib,            # grep 'setup/always/setup_passlib' test/integration/targets/*/aliases
+         python3-pexpect,            # grep 'setup/always/setup_pexpect' test/integration/targets/*/aliases
+         python3-pip,                # ansible-test-config, builtin_vars_prompt, remove again and fix tests
+         shellcheck,                 # ansible-test-docker
+Restrictions:
+  allow-stderr,     # lots of STDERR output
+  flaky,            # known to be broken
+  isolation-machine, # lxc containers have problems with mounting loopback
+  needs-internet,   # used for ansible-galaxy and pip tests
+  needs-sudo,       # used to call testbed-setup.sh
+  # don't run broken tests on CI
+  disabled-on-ci,

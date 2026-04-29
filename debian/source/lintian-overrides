@@ -1,0 +1,3 @@
+# "disabled-on-ci" is a custom restriction to let DDs run tests locally by
+# skipping that restriction
+ansible-core source: unknown-runtime-tests-restriction disabled-on-ci [debian/tests/control:*]
