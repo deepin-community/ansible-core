@@ -1,0 +1,42 @@
+Description: Mark root-needing tests as such
+Author: Lee Garrett <debian@rocketjump.eu>
+Origin: upstream, https://patch-diff.githubusercontent.com/raw/ansible/ansible/pull/84487.patch
+Forwarded: https://github.com/ansible/ansible/pull/84487
+Last-Update: 2024-12-21
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+diff --git a/test/integration/targets/become/aliases b/test/integration/targets/become/aliases
+index 2d93d9aa49f61c..8f114f091b3176 100644
+--- a/test/integration/targets/become/aliases
++++ b/test/integration/targets/become/aliases
+@@ -1,5 +1,6 @@
+-destructive
+-shippable/posix/group1
+ context/target
++destructive
+ gather_facts/no
++needs/root
+ setup/always/setup_passlib_controller  # required for setup_test_user
++shippable/posix/group1
+diff --git a/test/integration/targets/hardware_facts/aliases b/test/integration/targets/hardware_facts/aliases
+index a08519ba3c1239..6c8283e154ae90 100644
+--- a/test/integration/targets/hardware_facts/aliases
++++ b/test/integration/targets/hardware_facts/aliases
+@@ -1,4 +1,5 @@
++context/controller
+ destructive
+ needs/privileged
++needs/root
+ shippable/posix/group4
+-context/controller
+diff --git a/test/integration/targets/slurp/aliases b/test/integration/targets/slurp/aliases
+index 069c660c332792..9d3ef296eb18cb 100644
+--- a/test/integration/targets/slurp/aliases
++++ b/test/integration/targets/slurp/aliases
+@@ -1,3 +1,4 @@
+-shippable/posix/group1
+ destructive
++needs/root
+ setup/always/setup_passlib_controller  # required for setup_test_user
++shippable/posix/group1

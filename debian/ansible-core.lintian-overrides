@@ -1,0 +1,13 @@
+# ansible-galaxy will generate roles and other things from skeleton files, and
+# those should come with a COPYING and README.md.
+ansible-core binary: extra-license-file [usr/lib/python3/dist-packages/ansible/galaxy/data/*]
+ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible/galaxy/data/*]
+
+# ansible-test needs those files to work.
+ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible_test/*]
+
+# upstream is aware of this. ansible-test is the internal testing tool.
+ansible-core binary: no-manual-page [usr/bin/ansible-test]
+
+# This is not documentation.
+ansible-core binary: package-contains-documentation-outside-usr-share-doc [usr/lib/python3/dist-packages/ansible_core-*.dist-info/top_level.txt]

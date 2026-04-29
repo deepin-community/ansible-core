@@ -1,0 +1,117 @@
+Description: Test aliases fix
+ Mark a bunch of integration tests as needs/root and sometimes destructive in
+ their aliases file, verifying that they indeed fail when run as unprivileged
+ user. Each commit message explains the rationale behind it.
+Author: Lee Garrett <debian@rocketjump.eu>
+Origin: upstream, https://patch-diff.githubusercontent.com/raw/ansible/ansible/pull/84377.patch
+Forwarded: https://github.com/ansible/ansible/pull/84377
+Last-Update: 2024-12-18
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/test/integration/targets/apt_key/aliases
++++ b/test/integration/targets/apt_key/aliases
+@@ -1,3 +1,5 @@
++destructive
++needs/root
+ shippable/posix/group1
+ skip/freebsd
+ skip/macos
+--- a/test/integration/targets/debconf/aliases
++++ b/test/integration/targets/debconf/aliases
+@@ -1 +1,3 @@
++destructive
++needs/root
+ shippable/posix/group1
+--- a/test/integration/targets/gathering/aliases
++++ b/test/integration/targets/gathering/aliases
+@@ -1,2 +1,4 @@
++destructive
++needs/root
+ shippable/posix/group5
+ context/controller
+--- a/test/integration/targets/group/aliases
++++ b/test/integration/targets/group/aliases
+@@ -1 +1,3 @@
++destructive
++needs/root
+ shippable/posix/group1
+--- a/test/integration/targets/noexec/aliases
++++ b/test/integration/targets/noexec/aliases
+@@ -1,3 +1,4 @@
++needs/root
+ shippable/posix/group4
+ context/controller
+ skip/docker
+--- a/test/integration/targets/service_facts/aliases
++++ b/test/integration/targets/service_facts/aliases
+@@ -1,3 +1,4 @@
++needs/root
+ shippable/posix/group2
+ skip/freebsd
+ skip/macos
+--- a/test/integration/targets/systemd/aliases
++++ b/test/integration/targets/systemd/aliases
+@@ -1 +1,3 @@
++destructive
++needs/root
+ shippable/posix/group1
+--- a/test/integration/targets/cron/aliases
++++ b/test/integration/targets/cron/aliases
+@@ -1,3 +1,4 @@
+ destructive
++needs/root
+ shippable/posix/group1
+ skip/macos
+--- a/test/integration/targets/dpkg_selections/aliases
++++ b/test/integration/targets/dpkg_selections/aliases
+@@ -1,5 +1,6 @@
+ shippable/posix/group1
+ destructive
++needs/root
+ skip/freebsd
+ skip/macos
+ skip/rhel
+--- a/test/integration/targets/facts_linux_network/aliases
++++ b/test/integration/targets/facts_linux_network/aliases
+@@ -1,4 +1,5 @@
+ needs/privileged
++needs/root
+ shippable/posix/group1
+ skip/freebsd
+ skip/macos
+--- a/test/integration/targets/package/aliases
++++ b/test/integration/targets/package/aliases
+@@ -1,2 +1,3 @@
++needs/root
+ shippable/posix/group1
+ destructive
+--- a/test/integration/targets/service/aliases
++++ b/test/integration/targets/service/aliases
+@@ -1,3 +1,4 @@
+ destructive
++needs/root
+ shippable/posix/group1
+ skip/macos
+--- a/test/integration/targets/user/aliases
++++ b/test/integration/targets/user/aliases
+@@ -1,2 +1,3 @@
+ destructive
++needs/root
+ shippable/posix/group1
+--- a/test/integration/targets/keyword_inheritance/aliases
++++ b/test/integration/targets/keyword_inheritance/aliases
+@@ -1,4 +1,5 @@
+ shippable/posix/group4
+ context/controller
++needs/root
+ needs/target/setup_test_user
+ setup/always/setup_passlib_controller  # required for setup_test_user
+--- a/test/integration/targets/omit/aliases
++++ b/test/integration/targets/omit/aliases
+@@ -1,4 +1,5 @@
+ shippable/posix/group5
++needs/root
+ needs/target/setup_test_user
+ context/controller
+ setup/always/setup_passlib_controller  # required for setup_test_user

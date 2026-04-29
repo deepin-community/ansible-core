@@ -1,0 +1,6 @@
+#!/bin/sh
+
+PYTHONPATH="$(pwd)/test/lib" ansible-test units \
+  --python-interpreter /usr/bin/python3 \
+  --exclude test/units/galaxy/test_collection_install.py \
+  --local

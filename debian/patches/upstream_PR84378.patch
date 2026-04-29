@@ -1,0 +1,169 @@
+Description: Fix non-root integration tests failure
+ A collection of commits to fix integration tests when run as non-root user.
+ This specifically only touches those tests that are intended to run as non-root
+ user.
+Author: Lee Garrett <debian@rocketjump.eu>
+Origin: upstream, https://patch-diff.githubusercontent.com/raw/ansible/ansible/pull/84378.patch
+Forwarded: https://github.com/ansible/ansible/pull/84378
+Last-Update: 2024-12-18
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/test/integration/targets/callback_default/callback_default.out.include_role_fails.stderr
++++ b/test/integration/targets/callback_default/callback_default.out.include_role_fails.stderr
+@@ -1,6 +1,6 @@
+ + ansible-playbook -i inventory test_include_role_fails.yml
+ ++ set +x
+-ERROR! the role 'does-not-exist' was not found in TEST_PATH/roles:/root/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:TEST_PATH
++ERROR! the role 'does-not-exist' was not found in TEST_PATH/roles:/<<HOMEDIR>>/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:TEST_PATH
+ 
+ The error appears to be in 'TEST_PATH/test_include_role_fails.yml': line 5, column 15, but may
+ be elsewhere in the file depending on the exact syntax problem.
+--- a/test/integration/targets/callback_default/callback_default.out.include_role_fails.stdout
++++ b/test/integration/targets/callback_default/callback_default.out.include_role_fails.stdout
+@@ -2,7 +2,7 @@
+ PLAY [testhost] ****************************************************************
+ 
+ TASK [include_role : does-not-exist] *******************************************
+-fatal: [testhost]: FAILED! => {"changed": false, "reason": "the role 'does-not-exist' was not found in TEST_PATH/roles:/root/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:TEST_PATH\n\nThe error appears to be in 'TEST_PATH/test_include_role_fails.yml': line 5, column 15, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n    - include_role:\n        name: does-not-exist\n              ^ here\n"}
++fatal: [testhost]: FAILED! => {"changed": false, "reason": "the role 'does-not-exist' was not found in TEST_PATH/roles:/<<HOMEDIR>>/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:TEST_PATH\n\nThe error appears to be in 'TEST_PATH/test_include_role_fails.yml': line 5, column 15, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n    - include_role:\n        name: does-not-exist\n              ^ here\n"}
+ 
+ PLAY RECAP *********************************************************************
+ testhost                   : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+--- a/test/integration/targets/callback_default/callback_default.out.result_format_yaml_lossy_verbose.stdout
++++ b/test/integration/targets/callback_default/callback_default.out.result_format_yaml_lossy_verbose.stdout
+@@ -160,15 +160,15 @@
+     changed: true
+     checksum: 0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33
+     dest: .../test_diff.txt
+-    gid: 0
+-    group: root
++    gid: <<GID>>
++    group: <<GROUP>>
+     md5sum: acbd18db4cc2f85cedef654fccc4a4d8
+     mode: '0644'
+-    owner: root
++    owner: <<OWNER>>
+     size: 3
+     src: .../.source.txt
+     state: file
+-    uid: 0
++    uid: <<UID>>
+ 
+ TASK [replace] *****************************************************************
+ --- before: .../test_diff.txt
+--- a/test/integration/targets/callback_default/callback_default.out.result_format_yaml_verbose.stdout
++++ b/test/integration/targets/callback_default/callback_default.out.result_format_yaml_verbose.stdout
+@@ -167,15 +167,15 @@
+     changed: true
+     checksum: 0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33
+     dest: .../test_diff.txt
+-    gid: 0
+-    group: root
++    gid: <<GID>>
++    group: <<GROUP>>
+     md5sum: acbd18db4cc2f85cedef654fccc4a4d8
+     mode: '0644'
+-    owner: root
++    owner: <<OWNER>>
+     size: 3
+     src: .../.source.txt
+     state: file
+-    uid: 0
++    uid: <<UID>>
+ 
+ TASK [replace] *****************************************************************
+ --- before: .../test_diff.txt
+--- a/test/integration/targets/callback_default/runme.sh
++++ b/test/integration/targets/callback_default/runme.sh
+@@ -13,6 +13,8 @@
+ 
+ set -eux
+ 
++umask 0022
++
+ run_test() {
+ 	local testname=$1
+ 	local playbook=$2
+@@ -29,13 +31,20 @@
+ 	sed -i -e 's/@@ -1,1 +1,1 @@/@@ -1 +1 @@/g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e 's/: .*\/test_diff\.txt/: ...\/test_diff.txt/g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e "s#${ANSIBLE_PLAYBOOK_DIR}#TEST_PATH#g" "${OUTFILE}.${testname}.stdout" "${OUTFILE}.${testname}.stderr"
+-	sed -i -e "s#/var/root/#/root/#g" "${OUTFILE}.${testname}.stdout" "${OUTFILE}.${testname}.stderr"  # macos
+ 	sed -i -e 's/^Using .*//g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e 's/[0-9]:[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{6\}/0:00:00.000000/g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e 's/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{6\}/0000-00-00 00:00:00.000000/g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e 's#: .*/\.source\.txt$#: .../.source.txt#g' "${OUTFILE}.${testname}.stdout"
+ 	sed -i -e '/secontext:/d' "${OUTFILE}.${testname}.stdout"
+-	sed -i -e 's/group: wheel/group: root/g' "${OUTFILE}.${testname}.stdout"
++
++	# normalize gid/group/owner/uid/homedir so tests can run as non-root user
++	ESC_HOME=$(echo "${HOME}" | sed -e 's/\//\\\//g')
++	sed -i -e "s/${ESC_HOME}/\/<<HOMEDIR>>/g" "${OUTFILE}.${testname}.stdout"
++	sed -i -e "s/${ESC_HOME}/\/<<HOMEDIR>>/g" "${OUTFILE}.${testname}.stderr"
++	sed -i -e "s/gid: $(id -g)/gid: <<GID>>/g" "${OUTFILE}.${testname}.stdout"
++	sed -i -e "s/group: $(id -gn)/group: <<GROUP>>/g" "${OUTFILE}.${testname}.stdout"
++	sed -i -e "s/owner: $(id -un)/owner: <<OWNER>>/g" "${OUTFILE}.${testname}.stdout"
++	sed -i -e "s/uid: $(id -u)/uid: <<UID>>/g" "${OUTFILE}.${testname}.stdout"
+ 
+ 	diff -u "${ORIGFILE}.${testname}.stdout" "${OUTFILE}.${testname}.stdout" || diff_failure
+ 	diff -u "${ORIGFILE}.${testname}.stderr" "${OUTFILE}.${testname}.stderr" || diff_failure
+--- a/test/integration/targets/ansible-vault/runme.sh
++++ b/test/integration/targets/ansible-vault/runme.sh
+@@ -5,7 +5,7 @@
+ 
+ 
+ MYTMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
+-trap 'rm -rf "${MYTMPDIR}"' EXIT
++trap 'chmod -R u+rwx ${MYTMPDIR}; rm -rf "${MYTMPDIR}"' EXIT
+ 
+ # create a test file
+ TEST_FILE="${MYTMPDIR}/test_file"
+--- a/test/integration/targets/setup_remote_tmp_dir/tasks/default-cleanup.yml
++++ b/test/integration/targets/setup_remote_tmp_dir/tasks/default-cleanup.yml
+@@ -1,3 +1,11 @@
++- name: Ensure temporary directory has correct perms to delete
++  file:
++    path: "{{ remote_tmp_dir }}"
++    mode: u+rwx
++    recurse: yes
++    follow: no
++  no_log: yes
++
+ - name: delete temporary directory
+   file:
+     path: "{{ remote_tmp_dir }}"
+--- a/test/integration/targets/ansible-galaxy/runme.sh
++++ b/test/integration/targets/ansible-galaxy/runme.sh
+@@ -526,7 +526,7 @@
+ 
+     ansible-galaxy collection list -p ~/.ansible/collections | tee out.txt
+ 
+-    [[ $(grep -c '# /root/.ansible/collections/ansible_collections' out.txt) -eq 1 ]]
++    [[ $(grep -c "# ${HOME}/.ansible/collections/ansible_collections" out.txt) -eq 1 ]]
+ 
+ f_ansible_galaxy_status \
+     "collection list invalid collection name"
+--- a/test/integration/targets/ansible-playbook-callbacks/callbacks_list.expected
++++ b/test/integration/targets/ansible-playbook-callbacks/callbacks_list.expected
+@@ -1,7 +1,7 @@
+  1 __init__
+-95 v2_on_any
++98 v2_on_any
+  1 v2_on_file_diff
+- 4 v2_playbook_on_handler_task_start
++ 5 v2_playbook_on_handler_task_start
+  3 v2_playbook_on_include
+  1 v2_playbook_on_no_hosts_matched
+  2 v2_playbook_on_no_hosts_remaining
+@@ -18,8 +18,8 @@
+  1 v2_runner_on_async_ok
+  2 v2_runner_on_async_poll
+  5 v2_runner_on_failed
+-16 v2_runner_on_ok
++17 v2_runner_on_ok
+  1 v2_runner_on_skipped
+-23 v2_runner_on_start
++24 v2_runner_on_start
+  1 v2_runner_on_unreachable
+  2 v2_runner_retry

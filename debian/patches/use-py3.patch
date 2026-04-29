@@ -1,0 +1,439 @@
+From: Lee Garrett <debian@rocketjump.eu>
+Date: Mon, 11 Nov 2024 09:17:12 +0000
+Subject: use py3
+
+Forwarded: not-needed
+Last-Update: 2021-11-06
+
+Use python 3 for all helper scripts during build
+
+This allows us to not depend on python 2 anymore for building.
+Last-Update: 2024-11-11
+---
+ .../targets/ansible-galaxy-collection/files/build_bad_tar.py      | 2 +-
+ test/integration/targets/blocks/runme.sh                          | 8 ++++----
+ test/integration/targets/builtin_vars_prompt/test-vars_prompt.py  | 2 +-
+ test/integration/targets/cli/test-cli.py                          | 2 +-
+ test/integration/targets/cli/test_k_and_K.py                      | 2 +-
+ test/integration/targets/gathering/uuid.fact                      | 2 +-
+ test/integration/targets/gathering_facts/uuid.fact                | 2 +-
+ test/integration/targets/module_utils/module_utils/sub/bam.py     | 2 +-
+ test/integration/targets/module_utils/module_utils/sub/bam/bam.py | 2 +-
+ test/integration/targets/pause/test-pause.py                      | 2 +-
+ test/integration/targets/pip/files/setup.py                       | 2 +-
+ test/integration/targets/plugin_config_for_inventory/runme.sh     | 4 ++--
+ test/integration/targets/service/files/ansible_test_service.py    | 2 +-
+ .../targets/service_facts/files/ansible_test_service.py           | 2 +-
+ .../targets/template/role_filter/filter_plugins/myplugin.py       | 2 +-
+ test/integration/targets/throttle/test_throttle.py                | 2 +-
+ .../targets/var_precedence/ansible-var-precedence-check.py        | 2 +-
+ 17 files changed, 21 insertions(+), 21 deletions(-)
+
+--- a/test/integration/targets/ansible-galaxy-collection/files/build_bad_tar.py
++++ b/test/integration/targets/ansible-galaxy-collection/files/build_bad_tar.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ # Copyright: (c) 2020, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/test/integration/targets/blocks/runme.sh
++++ b/test/integration/targets/blocks/runme.sh
+@@ -9,7 +9,7 @@
+ rm -f block_test.out
+ # run the test and check to make sure the right number of completions was logged
+ ansible-playbook -vv main.yml -i ../../inventory | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -17,7 +17,7 @@
+ rm -f block_test.out block_test_wo_colors.out
+ # run test with free strategy and again count the completions
+ ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=free | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -25,7 +25,7 @@
+ rm -f block_test.out block_test_wo_colors.out
+ # run test with host_pinned strategy and again count the completions
+ ansible-playbook -vv main.yml -i ../../inventory -e test_strategy=host_pinned | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+@@ -33,7 +33,7 @@
+ # run test that includes tasks that fail inside a block with always
+ rm -f block_test.out block_test_wo_colors.out
+ ansible-playbook -vv block_fail.yml -i ../../inventory | tee block_test.out
+-env python -c \
++env python3 -c \
+     'import sys, re; sys.stdout.write(re.sub("\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]", "", sys.stdin.read()))' \
+     <block_test.out >block_test_wo_colors.out
+ [ "$(grep -c 'TEST COMPLETE' block_test.out)" = "$(grep -E '^[0-9]+ plays in' block_test_wo_colors.out | cut -f1 -d' ')" ]
+--- a/test/integration/targets/builtin_vars_prompt/test-vars_prompt.py
++++ b/test/integration/targets/builtin_vars_prompt/test-vars_prompt.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/cli/test-cli.py
++++ b/test/integration/targets/cli/test-cli.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright (c) 2019 Matt Martz <matt@sivel.net>
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+--- a/test/integration/targets/cli/test_k_and_K.py
++++ b/test/integration/targets/cli/test_k_and_K.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import annotations
+--- a/test/integration/targets/gathering/uuid.fact
++++ b/test/integration/targets/gathering/uuid.fact
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ 
+ 
+--- a/test/integration/targets/gathering_facts/uuid.fact
++++ b/test/integration/targets/gathering_facts/uuid.fact
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ 
+ 
+--- a/test/integration/targets/module_utils/module_utils/sub/bam.py
++++ b/test/integration/targets/module_utils/module_utils/sub/bam.py
+@@ -1,3 +1,3 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ bam = "BAM FROM sub/bam.py"
+--- a/test/integration/targets/module_utils/module_utils/sub/bam/bam.py
++++ b/test/integration/targets/module_utils/module_utils/sub/bam/bam.py
+@@ -1,3 +1,3 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ bam = "BAM FROM sub/bam/bam.py"
+--- a/test/integration/targets/pause/test-pause.py
++++ b/test/integration/targets/pause/test-pause.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/pip/files/setup.py
++++ b/test/integration/targets/pip/files/setup.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/plugin_config_for_inventory/runme.sh
++++ b/test/integration/targets/plugin_config_for_inventory/runme.sh
+@@ -7,12 +7,12 @@
+ 
+ # check default values
+ ansible-inventory --list -i ./config_without_parameter.yml --export | \
+-    env python -c "import json, sys; inv = json.loads(sys.stdin.read()); \
++    env python3 -c "import json, sys; inv = json.loads(sys.stdin.read()); \
+                    assert set(inv['_meta']['hostvars']['test_host']['departments']) == set(['seine-et-marne', 'haute-garonne'])"
+ 
+ # check values
+ ansible-inventory --list -i ./config_with_parameter.yml --export | \
+-    env python -c "import json, sys; inv = json.loads(sys.stdin.read()); \
++    env python3 -c "import json, sys; inv = json.loads(sys.stdin.read()); \
+                    assert set(inv['_meta']['hostvars']['test_host']['departments']) == set(['paris'])"
+ 
+ export ANSIBLE_CACHE_PLUGINS=cache_plugins/
+--- a/test/integration/targets/service/files/ansible_test_service.py
++++ b/test/integration/targets/service/files/ansible_test_service.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ # this is mostly based off of the code found here:
+ # http://code.activestate.com/recipes/278731-creating-a-daemon-the-python-way/
+--- a/test/integration/targets/service_facts/files/ansible_test_service.py
++++ b/test/integration/targets/service_facts/files/ansible_test_service.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ # this is mostly based off of the code found here:
+ # http://code.activestate.com/recipes/278731-creating-a-daemon-the-python-way/
+--- a/test/integration/targets/template/role_filter/filter_plugins/myplugin.py
++++ b/test/integration/targets/template/role_filter/filter_plugins/myplugin.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/throttle/test_throttle.py
++++ b/test/integration/targets/throttle/test_throttle.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/var_precedence/ansible-var-precedence-check.py
++++ b/test/integration/targets/var_precedence/ansible-var-precedence-check.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ # A tool to check the order of precedence for ansible variables
+ # https://github.com/ansible/ansible/blob/devel/test/integration/test_var_precedence.yml
+--- a/lib/ansible/cli/adhoc.py
++++ b/lib/ansible/cli/adhoc.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/config.py
++++ b/lib/ansible/cli/config.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2017, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ # PYTHON_ARGCOMPLETE_OK
+--- a/lib/ansible/cli/console.py
++++ b/lib/ansible/cli/console.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2014, Nandor Sivok <dominis@haxor.hu>
+ # Copyright: (c) 2016, Redhat Inc
+ # Copyright: (c) 2018, Ansible Project
+--- a/lib/ansible/cli/doc.py
++++ b/lib/ansible/cli/doc.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2014, James Tanner <tanner.jc@gmail.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2013, James Cammarata <jcammarata@ansible.com>
+ # Copyright: (c) 2018-2021, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/inventory.py
++++ b/lib/ansible/cli/inventory.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2017, Brian Coca <bcoca@ansible.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/playbook.py
++++ b/lib/ansible/cli/playbook.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/pull.py
++++ b/lib/ansible/cli/pull.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright: (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/cli/vault.py
++++ b/lib/ansible/cli/vault.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # (c) 2014, James Tanner <tanner.jc@gmail.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+--- a/lib/ansible/plugins/inventory/script.py
++++ b/lib/ansible/plugins/inventory/script.py
+@@ -73,7 +73,7 @@
+ 
+ ### python example with ini config
+ 
+-    #!/usr/bin/env python
++    #!/usr/bin/env python3
+     """
+     # ansible_inventory.py
+     """
+--- a/packaging/cli-doc/build.py
++++ b/packaging/cli-doc/build.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # PYTHON_ARGCOMPLETE_OK
+ """Build documentation for ansible-core CLI programs."""
+ 
+--- a/packaging/release.py
++++ b/packaging/release.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # PYTHON_ARGCOMPLETE_OK
+ """Manage upstream ansible-core releases."""
+ 
+--- a/test/integration/targets/ansible-config/files/ini_dupes.py
++++ b/test/integration/targets/ansible-config/files/ini_dupes.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import annotations
+--- a/test/integration/targets/ansible-galaxy-role/files/create-role-archive.py
++++ b/test/integration/targets/ansible-galaxy-role/files/create-role-archive.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Create a role archive which overwrites an arbitrary file."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/ansible-test-container/runme.py
++++ b/test/integration/targets/ansible-test-container/runme.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Test suite used to verify ansible-test is able to run its containers on various container hosts."""
+ 
+ from __future__ import annotations
+--- a/test/integration/targets/ansible-test-integration-targets/test.py
++++ b/test/integration/targets/ansible-test-integration-targets/test.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from __future__ import annotations
+ 
+ import subprocess
+--- a/test/integration/targets/ansible-test-no-tty/ansible_collections/ns/col/run-with-pty.py
++++ b/test/integration/targets/ansible-test-no-tty/ansible_collections/ns/col/run-with-pty.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Run a command using a PTY."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/ansible-test-no-tty/ansible_collections/ns/col/tests/integration/targets/no-tty/assert-no-tty.py
++++ b/test/integration/targets/ansible-test-no-tty/ansible_collections/ns/col/tests/integration/targets/no-tty/assert-no-tty.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Assert no TTY is available."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/ansible-test/venv-pythons.py
++++ b/test/integration/targets/ansible-test/venv-pythons.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Return target Python options for use with ansible-test."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/ansible-vault/faux-editor.py
++++ b/test/integration/targets/ansible-vault/faux-editor.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # Ansible is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+--- a/test/integration/targets/ansible-vault/password-script.py
++++ b/test/integration/targets/ansible-vault/password-script.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # Ansible is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+--- a/test/integration/targets/ansible-vault/test-vault-client.py
++++ b/test/integration/targets/ansible-vault/test-vault-client.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # -*- coding: utf-8 -*-
+ 
+ from __future__ import annotations
+--- a/test/integration/targets/binary_modules/build.py
++++ b/test/integration/targets/binary_modules/build.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """
+ Compile binary modules for this test for access from S3 at:
+ https://ci-files.testing.ansible.com/test/integration/roles/test_binary_modules/
+--- a/test/integration/targets/collection/update-ignore.py
++++ b/test/integration/targets/collection/update-ignore.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Rewrite a sanity ignore file to expand Python versions for import ignores and write the file out with the correct Ansible version in the name."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/debugger/test_run_once.py
++++ b/test/integration/targets/debugger/test_run_once.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from __future__ import annotations
+ 
+ import io
+--- a/test/integration/targets/fork_safe_stdio/run-with-pty.py
++++ b/test/integration/targets/fork_safe_stdio/run-with-pty.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ """Run a command using a PTY."""
+ from __future__ import annotations
+ 
+--- a/test/integration/targets/packaging_cli-doc/verify.py
++++ b/test/integration/targets/packaging_cli-doc/verify.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from __future__ import annotations
+ 
+ import os
+--- a/test/integration/targets/test_utils/scripts/timeout.py
++++ b/test/integration/targets/test_utils/scripts/timeout.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ from __future__ import annotations
+ 
+ import argparse
+--- a/test/lib/ansible_test/_util/target/cli/ansible_test_cli_stub.py
++++ b/test/lib/ansible_test/_util/target/cli/ansible_test_cli_stub.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # PYTHON_ARGCOMPLETE_OK
+ """Command line entry point for ansible-test."""
+ 
