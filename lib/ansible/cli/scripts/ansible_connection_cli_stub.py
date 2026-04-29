@@ -21,7 +21,7 @@ from ansible.cli.arguments import option_helpers as opt_help
 from ansible.module_utils.common.text.converters import to_bytes, to_text
 from ansible.module_utils.connection import Connection, ConnectionError, send_data, recv_data
 from ansible.module_utils.service import fork_process
-from ansible.parsing.ajson import AnsibleJSONEncoder, AnsibleJSONDecoder
+from ansible.module_utils._internal._json._profiles import _tagless
 from ansible.playbook.play_context import PlayContext
 from ansible.plugins.loader import connection_loader, init_plugin_loader
 from ansible.utils.path import unfrackpath, makedirs_safe
@@ -57,10 +57,10 @@ def file_lock(lock_path):
 
 
 class ConnectionProcess(object):
-    '''
+    """
     The connection process wraps around a Connection object that manages
     the connection to a remote device that persists over the playbook
-    '''
+    """
     def __init__(self, fd, play_context, socket_path, original_path, task_uuid=None, ansible_playbook_pid=None):
         self.play_context = play_context
         self.socket_path = socket_path
@@ -110,7 +110,7 @@ class ConnectionProcess(object):
             result['exception'] = traceback.format_exc()
         finally:
             result['messages'] = messages
-            self.fd.write(json.dumps(result, cls=AnsibleJSONEncoder))
+            self.fd.write(json.dumps(result, cls=_tagless.Encoder))
             self.fd.close()
 
     def run(self):
@@ -292,7 +292,7 @@ def main(args=None):
                 else:
                     os.close(w)
                     rfd = os.fdopen(r, 'r')
-                    data = json.loads(rfd.read(), cls=AnsibleJSONDecoder)
+                    data = json.loads(rfd.read(), cls=_tagless.Decoder)
                     messages.extend(data.pop('messages'))
                     result.update(data)
 
@@ -330,10 +330,10 @@ def main(args=None):
     sys.stdout = saved_stdout
     if 'exception' in result:
         rc = 1
-        sys.stderr.write(json.dumps(result, cls=AnsibleJSONEncoder))
+        sys.stderr.write(json.dumps(result, cls=_tagless.Encoder))
     else:
         rc = 0
-        sys.stdout.write(json.dumps(result, cls=AnsibleJSONEncoder))
+        sys.stdout.write(json.dumps(result, cls=_tagless.Encoder))
 
     sys.exit(rc)
 

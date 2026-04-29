@@ -44,6 +44,12 @@ touch /root/.ssh/authorized_keys
 # allow pip to install system packages for the tests
 rm -f /usr/lib/python3*/EXTERNALLY-MANAGED
 
+# Remove autopkgtest's global pinning, as that breaks the apt and
+# deb822_repository integration tests; see
+# https://github.com/ansible/ansible/issues/85147.  Don't touch more
+# specific pins such as those created by "autopkgtest --pin-packages".
+grep -lr 'Pin: origin ""' /etc/apt/preferences.d | xargs -r rm -f
+
 # Workaround for integration test "apt", because of policy in base-files
 # See
 # MODULE FAILURE: No start of json char found

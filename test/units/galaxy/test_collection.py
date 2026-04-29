@@ -22,13 +22,13 @@ from ansible.cli.galaxy import GalaxyCLI
 from ansible.config import manager
 from ansible.errors import AnsibleError
 from ansible.galaxy import api, collection, token
+from ansible.module_utils.common.sentinel import Sentinel
 from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
 from ansible.module_utils.common.file import S_IRWU_RG_RO
 import builtins
 from ansible.utils import context_objects as co
 from ansible.utils.display import Display
 from ansible.utils.hashing import secure_hash_s
-from ansible.utils.sentinel import Sentinel
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +64,7 @@ def collection_input(tmp_path_factory, collection_path_suffix):
 
 @pytest.fixture()
 def collection_artifact(monkeypatch, tmp_path_factory):
-    ''' Creates a temp collection artifact and mocked open_url instance for publishing tests '''
+    """ Creates a temp collection artifact and mocked open_url instance for publishing tests """
     mock_open = MagicMock()
     monkeypatch.setattr(collection.concrete_artifact_manager, 'open_url', mock_open)
 
@@ -97,7 +97,7 @@ def galaxy_yml_dir(request, tmp_path_factory):
 
 @pytest.fixture()
 def tmp_tarfile(tmp_path_factory, manifest_info):
-    ''' Creates a temporary tar file for _extract_tar_file tests '''
+    """ Creates a temporary tar file for _extract_tar_file tests """
     filename = u'ÅÑŚÌβŁÈ'
     temp_dir = to_bytes(tmp_path_factory.mktemp('test-%s Collections' % to_native(filename)))
     tar_file = os.path.join(temp_dir, to_bytes('%s.tar.gz' % filename))

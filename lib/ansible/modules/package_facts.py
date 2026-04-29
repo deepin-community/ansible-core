@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 module: package_facts
 short_description: Package information as facts
 description:
@@ -23,7 +23,7 @@ options:
     default: ['auto']
     choices:
         auto: Depending on O(strategy), will match the first or all package managers provided, in order
-        rpm: For RPM based distros, requires RPM Python bindings, not installed by default on Suse (python3-rpm)
+        rpm: For RPM based distros, requires RPM Python bindings, not installed by default on Suse or Fedora 41+ (python3-rpm)
         yum: Alias to rpm
         dnf: Alias to rpm
         dnf5: Alias to rpm
@@ -67,9 +67,9 @@ attributes:
         support: full
     platform:
         platforms: posix
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Gather the package facts
   ansible.builtin.package_facts:
     manager: auto
@@ -83,9 +83,9 @@ EXAMPLES = '''
     msg: "{{ ansible_facts.packages['foobar'] | length }} versions of foobar are installed!"
   when: "'foobar' in ansible_facts.packages"
 
-'''
+"""
 
-RETURN = '''
+RETURN = """
 ansible_facts:
   description: Facts to add to ansible_facts.
   returned: always
@@ -248,7 +248,7 @@ ansible_facts:
             ],
           }
         }
-'''
+"""
 
 import re
 
@@ -278,11 +278,11 @@ class RPM(RespawningLibMgr):
         return self._lib.TransactionSet().dbMatch()
 
     def get_package_details(self, package):
-        return dict(name=package[self._lib.RPMTAG_NAME],
-                    version=package[self._lib.RPMTAG_VERSION],
-                    release=package[self._lib.RPMTAG_RELEASE],
-                    epoch=package[self._lib.RPMTAG_EPOCH],
-                    arch=package[self._lib.RPMTAG_ARCH],)
+        return dict(name=to_text(package[self._lib.RPMTAG_NAME]),
+                    version=to_text(package[self._lib.RPMTAG_VERSION]),
+                    release=to_text(package[self._lib.RPMTAG_RELEASE]),
+                    epoch=to_text(package[self._lib.RPMTAG_EPOCH]),
+                    arch=to_text(package[self._lib.RPMTAG_ARCH]),)
 
 
 class APT(RespawningLibMgr):
@@ -460,7 +460,7 @@ def main():
 
     # get supported pkg managers
     PKG_MANAGERS = get_all_pkg_managers()
-    PKG_MANAGER_NAMES = [x.lower() for x in PKG_MANAGERS.keys()]
+    PKG_MANAGER_NAMES = sorted([x.lower() for x in PKG_MANAGERS.keys()])
     # add aliases
     PKG_MANAGER_NAMES.extend([alias for alist in ALIASES.values() for alias in alist])
 
@@ -510,12 +510,24 @@ def main():
 
         manager = PKG_MANAGERS[pkgmgr]()
         try:
+            packages_found = {}
             if manager.is_available(handle_exceptions=False):
-                found += 1
                 try:
-                    packages.update(manager.get_packages())
+                    packages_found = manager.get_packages()
                 except Exception as e:
                     module.warn('Failed to retrieve packages with %s: %s' % (pkgmgr, to_text(e)))
+
+            # only consider 'found' if it results in something
+            if packages_found:
+                found += 1
+                for k in packages_found.keys():
+                    if k in packages:
+                        packages[k].extend(packages_found[k])
+                    else:
+                        packages[k] = packages_found[k]
+            else:
+                module.warn('Found "%s" but no associated packages' % (pkgmgr))
+
         except Exception as e:
             if pkgmgr in module.params['manager']:
                 module.warn('Requested package manager %s was not usable by this module: %s' % (pkgmgr, to_text(e)))

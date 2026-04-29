@@ -1,745 +1,1410 @@
-ancestor: 2.17.0
+ancestor: 2.18.0
 releases:
-  2.18.0:
+  2.19.0:
     changes:
-      release_summary: '| Release Date: 2024-11-04
+      release_summary: '| Release Date: 2025-07-21
 
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
 
         '
-    codename: Fool in the Rain
+    codename: What Is and What Should Never Be
     fragments:
-    - 2.18.0_summary.yaml
-    release_date: '2024-11-04'
-  2.18.0b1:
+    - 2.19.0_summary.yaml
+    release_date: '2025-07-21'
+  2.19.0b1:
     changes:
       breaking_changes:
-      - Stopped wrapping all commands sent over SSH on a Windows target with a ``powershell.exe``
-        executable. This results in one less process being started on each command
-        for Windows to improve efficiency, simplify the code, and make ``raw`` an
-        actual raw command run with the default shell configured on the Windows sshd
-        settings. This should have no affect on most tasks except for ``raw`` which
-        now is not guaranteed to always be running in a PowerShell shell and from
-        having the console output codepage set to UTF-8. To avoid this issue either
-        swap to using ``ansible.windows.win_command``, ``ansible.windows.win_shell``,
-        ``ansible.windows.win_powershell`` or manually wrap the raw command with the
-        shell commands needed to set the output console encoding.
-      - persistent connection plugins - The ``ANSIBLE_CONNECTION_PATH`` config option
-        no longer has any effect.
-      bugfixes:
-      - -> runas become - Generate new token for the SYSTEM token to use for become.
-        This should result in the full SYSTEM token being used and problems starting
-        the process that fails with ``The process creation has been blocked``.
-      - Add a version ceiling constraint for pypsrp to avoid potential breaking changes
-        in the 1.0.0 release.
-      - Add descriptions for ``ansible-galaxy install --help` and ``ansible-galaxy
-        role|collection install --help``.
-      - Avoid truncating floats when casting into int, as it can lead to truncation
-        and unexpected results. 0.99999 will be 0, not 1.
-      - COLOR_SKIP will not alter "included" events color display anymore.
-      - Callbacks now correctly get the resolved connection plugin name as the connection
-        used.
-      - Darwin - add unit tests for Darwin hardware fact gathering.
-      - Fix ``SemanticVersion.parse()`` to store the version string so that ``__repr__``
-        reports it instead of ``None`` (https://github.com/ansible/ansible/pull/83831).
-      - Fix a traceback when an environment variable contains certain special characters
-        (https://github.com/ansible/ansible/issues/83498)
-      - 'Fix an issue when setting a plugin name from an unsafe source resulted in
-        ``ValueError: unmarshallable object`` (https://github.com/ansible/ansible/issues/82708)'
-      - Fix an issue where registered variable was not available for templating in
-        ``loop_control.label`` on skipped looped tasks (https://github.com/ansible/ansible/issues/83619)
-      - Fix for ``meta`` tasks breaking host/fork affinity with ``host_pinned`` strategy
-        (https://github.com/ansible/ansible/issues/83294)
-      - Fix handlers not being executed in lockstep using the linear strategy in some
-        cases (https://github.com/ansible/ansible/issues/82307)
-      - Fix rapid memory usage growth when notifying handlers using the ``listen``
-        keyword (https://github.com/ansible/ansible/issues/83392)
-      - Fix the task attribute ``resolved_action`` to show the FQCN instead of ``None``
-        when ``action`` or ``local_action`` is used in the playbook.
-      - Fix using ``module_defaults`` with ``local_action``/``action`` (https://github.com/ansible/ansible/issues/81905).
-      - Fix using the current task's directory for looking up relative paths within
-        roles (https://github.com/ansible/ansible/issues/82695).
-      - 'Remove deprecated config options DEFAULT_FACT_PATH, DEFAULT_GATHER_SUBSET,
-        and DEFAULT_GATHER_TIMEOUT in favor of setting ``fact_path``, ``gather_subset``
-        and ``gather_timeout`` as ``module_defaults`` for ``ansible.builtin.setup``.
-
-        These will apply to both the ``gather_facts`` play keyword, and any ``ansible.builtin.setup``
-        tasks.
-
-        To configure these options only for the ``gather_facts`` keyword, set these
-        options as play keywords also.'
-      - Set LANGUAGE environment variable is set to a non-English locale (https://github.com/ansible/ansible/issues/83608).
-      - '``ansible-galaxy install --help`` - Fix the usage text and document that
-        the requirements file passed to ``-r`` can include collections and roles.'
-      - '``ansible-galaxy role install`` - update the default timeout to download
-        archive URLs from 20 seconds to 60 (https://github.com/ansible/ansible/issues/83521).'
-      - '``end_host`` - fix incorrect return code when executing ``end_host`` in the
-        ``rescue`` section (https://github.com/ansible/ansible/issues/83447)'
-      - addressed issue of trailing text been ignored, non-ASCII characters are parsed,
-        enhance white space handling and fixed overly permissive issue of human_to_bytes
-        filter(https://github.com/ansible/ansible/issues/82075)
-      - ansible-config will now properly template defaults before dumping them.
-      - ansible-doc - fixed "inicates" typo in output
-      - ansible-doc - format top-level descriptions with multiple paragraphs as multiple
-        paragraphs, instead of concatenating them (https://github.com/ansible/ansible/pull/83155).
-      - ansible-doc - handle no_fail condition for role.
-      - ansible-doc - make colors configurable.
-      - ansible-galaxy collection install - remove old installation info when installing
-        collections (https://github.com/ansible/ansible/issues/83182).
-      - ansible-galaxy role install - fix symlinks (https://github.com/ansible/ansible/issues/82702,
-        https://github.com/ansible/ansible/issues/81965).
-      - ansible-test - The ``pylint`` sanity test now includes the controller/target
-        context of files when grouping them. This allows the ``--py-version`` option
-        to be passed to ``pylint`` to indicate the minimum supported Python version
-        for each test context, preventing ``pylint`` from defaulting to the Python
-        version used to invoke the test.
-      - ansible-test action-plugin-docs - Fix to check for sidecar documentation for
-        action plugins
-      - ansible_managed restored it's 'templatability' by ensuring the possible injection
-        routes are cut off earlier in the process.
-      - apt - report changed=True when some packages are being removed (https://github.com/ansible/ansible/issues/46314).
-      - apt_* - add more info messages raised while updating apt cache (https://github.com/ansible/ansible/issues/77941).
-      - assemble - update argument_spec with 'decrypt' option which is required by
-        action plugin (https://github.com/ansible/ansible/issues/80840).
-      - atomic_move - fix using the setgid bit on the parent directory when creating
-        files (https://github.com/ansible/ansible/issues/46742, https://github.com/ansible/ansible/issues/67177).
-      - config, restored the ability to set module compression via a variable
-      - connection plugins using the 'extras' option feature would need variables
-        to match the plugin's loaded name, sometimes requiring fqcn, which is not
-        the same as the documented/declared/expected variables. Now we fall back to
-        the 'basename' of the fqcn, but plugin authors can still set the expected
-        value directly.
-      - copy - mtime/atime not updated. Fix now update mtime/atime(https://github.com/ansible/ansible/issues/83013)
-      - csvfile lookup - give an error when no search term is provided using modern
-        config syntax (https://github.com/ansible/ansible/issues/83689).
-      - debconf - fix normalization of value representation for boolean vtypes in
-        new packages (https://github.com/ansible/ansible/issues/83594)
-      - delay keyword is now a float, matching the underlying 'time' API and user
-        expectations.
-      - display - warn user about empty log filepath (https://github.com/ansible/ansible/issues/79959).
-      - display now does a better job of mapping warnings/errors to the proper log
-        severity when using ansible.log. We still use color as a fallback mapping
-        (now prioritiezed by severity) but mostly rely on it beind directly set by
-        warnning/errors calls.
-      - distro package - update the distro package version from 1.8.0 to 1.9.0  (https://github.com/ansible/ansible/issues/82935)
-      - dnf - Ensure that we are handling DownloadError properly in the dnf module
-      - dnf - Substitute variables in DNF cache path (https://github.com/ansible/ansible/pull/80094).
-      - dnf - fix an issue where two packages of the same ``evr`` but different arch
-        failed to install (https://github.com/ansible/ansible/issues/83406)
-      - dnf - honor installroot for ``cachedir``, ``logdir`` and ``persistdir``
-      - dnf - perform variable substitutions in ``logdir`` and ``persistdir``
-      - dnf, dnf5 - fix for installing a set of packages by specifying them using
-        a wildcard character (https://github.com/ansible/ansible/issues/83373)
-      - 'dnf5 - re-introduce the ``state: installed`` alias to ``state: present``
-        (https://github.com/ansible/ansible/issues/83960)'
-      - dnf5 - replace removed API calls
-      - ensure we have logger before we log when we have increased verbosity.
-      - facts - `support_discard` now returns `0` if either `discard_granularity`
-        or `discard_max_hw_bytes` is zero; otherwise it returns the value of `discard_granularity`,
-        as before (https://github.com/ansible/ansible/pull/83480).
-      - facts - add a generic detection for VMware in product name.
-      - facts - add facts about x86_64 flags to detect microarchitecture (https://github.com/ansible/ansible/issues/83331).
-      - fetch - add error message when using ``dest`` with a trailing slash that becomes
-        a local directory - https://github.com/ansible/ansible/issues/82878
-      - file - retrieve the link's full path when hard linking a soft link with follow
-        (https://github.com/ansible/ansible/issues/33911).
-      - fixed the issue of creating user directory using tilde(~) always reported
-        "changed".(https://github.com/ansible/ansible/issues/82490)
-      - fixed unit test test_borken_cowsay to address mock not been properly applied
-        when existing unix system already have cowsay installed.
-      - freebsd - refactor dmidecode fact gathering code for simplicity.
-      - freebsd - update disk and slices regex for fact gathering (https://github.com/ansible/ansible/pull/82081).
-      - get_url - Verify checksum using tmpsrc, not dest (https://github.com/ansible/ansible/pull/64092)
-      - git - check if git version is available or not before using it for comparison
-        (https://github.com/ansible/ansible/issues/72321).
-      - include_tasks - Display location when attempting to load a task list where
-        ``include_*`` did not specify any value - https://github.com/ansible/ansible/issues/83874
-      - known_hosts - the returned module invocation now accurately reflects the module
-        arguments.
-      - linear strategy now provides a properly templated task name to the v2_runner_on_started
-        callback event.
-      - 'linear strategy: fix handlers included via ``include_tasks`` handler to be
-        executed in lockstep (https://github.com/ansible/ansible/issues/83019)'
-      - linux - remove extraneous get_bin_path API call.
-      - local - handle error while parsing values in ini files (https://github.com/ansible/ansible/issues/82717).
-      - lookup - Fixed examples of csv lookup plugin (https://github.com/ansible/ansible/issues/83031).
-      - module_defaults - do not display action/module deprecation warnings when using
-        an action_group that contains a deprecated plugin (https://github.com/ansible/ansible/issues/83490).
-      - module_utils atomic_move (used by most file based modules), now correctly
-        handles permission copy and setting mtime correctly across all paths
-      - package_facts - apk fix when cache is empty (https://github.com/ansible/ansible/issues/83126).
-      - package_facts - no longer fails silently when the selected package manager
-        is unable to list packages.
-      - package_facts - returns the correct warning when package listing fails.
-      - persistent connection plugins - The correct Ansible persistent connection
-        helper is now always used. Previously, the wrong script could be used, depending
-        on the value of the ``PATH`` environment variable. As a result, users were
-        sometimes required to set ``ANSIBLE_CONNECTION_PATH`` to use the correct script.
-      - powershell - Implement more robust deletion mechanism for C# code compilation
-        temporary files. This should avoid scenarios where the underlying temporary
-        directory may be temporarily locked by antivirus tools or other IO problems.
-        A failure to delete one of these temporary directories will result in a warning
-        rather than an outright failure.
-      - powershell - Improve CLIXML decoding to decode all control characters and
-        unicode characters that are encoded as surrogate pairs.
-      - psrp - Fix bug when attempting to fetch a file path that contains special
-        glob characters like ``[]``
-      - replace - Updated before/after example (https://github.com/ansible/ansible/issues/83390).
-      - runtime-metadata sanity test - do not crash on deprecations if ``galaxy.yml``
-        contains an empty ``version`` field (https://github.com/ansible/ansible/pull/83831).
-      - service - fix order of CLI arguments on FreeBSD (https://github.com/ansible/ansible/pull/81377).
-      - service_facts - don't crash if OpenBSD rcctl variable contains '=' character
-        (https://github.com/ansible/ansible/issues/83457)
-      - service_facts will now detect failed services more accurately across systemd
-        implementations.
-      - setup module (fact gathering), added fallbcak code path to handle mount fact
-        gathering in linux when threading is not available
-      - setup/gather_facts will skip missing ``sysctl`` instead of being a fatal error
-        (https://github.com/ansible/ansible/pull/81297).
-      - shell plugin - properly quote all needed components of shell commands (https://github.com/ansible/ansible/issues/82535)
-      - ssh - Fix bug when attempting to fetch a file path with characters that should
-        be quoted when using the ``piped`` transfer method
-      - support the countme option when using yum_repository
-      - systemd - extend systemctl is-enabled check to handle "enabled-runtime" (https://github.com/ansible/ansible/pull/77754).
-      - systemd facts - handle AttributeError raised while gathering facts on non-systemd
-        hosts.
-      - systemd_service - handle mask operation failure (https://github.com/ansible/ansible/issues/81649).
-      - templating hostvars under native jinja will not cause serialization errors
-        anymore.
-      - the raw arguments error now just displays the short names of modules instead
-        of every possible variation
-      - unarchive - Better handling of files with an invalid timestamp in zip file
-        (https://github.com/ansible/ansible/issues/81092).
-      - unarchive - trigger change when size and content differ when other properties
-        are unchanged (https://github.com/ansible/ansible/pull/83454).
-      - unsafe data - Address an incompatibility when iterating or getting a single
-        index from ``AnsibleUnsafeBytes``
-      - unsafe data - Address an incompatibility with ``AnsibleUnsafeText`` and ``AnsibleUnsafeBytes``
-        when pickling with ``protocol=0``
-      - unsafe data - Enable directly using ``AnsibleUnsafeText`` with Python ``pathlib``
-        (https://github.com/ansible/ansible/issues/82414)
-      - uri - deprecate 'yes' and 'no' value for 'follow_redirects' parameter.
-      - vault - handle vault password file value when it is directory (https://github.com/ansible/ansible/issues/42960).
-      - vault.is_encrypted_file is now optimized to be called in runtime and not for
-        being called in tests
-      - vault_encrypted test documentation, name and examples have been fixed, other
-        parts were clarified
-      - winrm - Add retry after exceeding commands per user quota that can occur in
-        loops and action plugins running multiple commands.
-      deprecated_features:
-      - Deprecate ``ansible.module_utils.basic.AnsibleModule.safe_eval`` and ``ansible.module_utils.common.safe_eval``
-        as they are no longer used.
-      - persistent connection plugins - The ``ANSIBLE_CONNECTION_PATH`` config option
-        no longer has any effect, and will be removed in a future release.
-      - yum_repository - deprecate ``async`` option as it has been removed in RHEL
-        8 and will be removed in ansible-core 2.22.
-      - 'yum_repository - the following options are deprecated: ``deltarpm_metadata_percentage``,
-        ``gpgcakey``, ``http_caching``, ``keepalive``, ``metadata_expire_filter``,
-        ``mirrorlist_expire``, ``protect``, ``ssl_check_cert_permissions``, ``ui_repoid_vars``
-        as they have no effect for dnf as an underlying package manager. The options
-        will be removed in ansible-core 2.22.'
-      known_issues:
-      - ansible-test - When using ansible-test containers with Podman on a Ubuntu
-        24.04 host, ansible-test must be run as a non-root user to avoid permission
-        issues caused by AppArmor.
-      - ansible-test - When using the Fedora 40 container with Podman on a Ubuntu
-        24.04 host, the ``unix-chkpwd`` AppArmor profile must be disabled on the host
-        to allow SSH connections to the container.
-      minor_changes:
-      - Add ``gid_min``, ``gid_max`` to the group plugin to overwrite the defaults
-        provided by the ``/etc/login.defs`` file (https://github.com/ansible/ansible/pull/81770).
-      - Add ``python3.13`` to the default ``INTERPRETER_PYTHON_FALLBACK`` list.
-      - Add ``uid_min``, ``uid_max`` to the user plugin to overwrite the defaults
-        provided by the ``/etc/login.defs`` file (https://github.com/ansible/ansible/pull/81770).
-      - Add a new meta task ``end_role`` (https://github.com/ansible/ansible/issues/22286)
-      - Add a new mount_facts module to support gathering information about mounts
-        that are excluded by default fact gathering.
-      - Introducing COLOR_INCLUDED parameter. This can set a specific color for "included"
-        events.
-      - Removed the shell ``environment`` config entry as this is already covered
-        by the play/task directives documentation and the value itself is not used
-        in the shell plugins. This should remove any confusion around how people set
-        the environment for a task.
-      - Suppress cryptography deprecation warnings for Blowfish and TripleDES when
-        the ``paramiko`` Python module is installed.
-      - The minimum supported Python version on targets is now Python 3.8.
-      - '``ansible-galaxy collection publish`` - add configuration options for the
-        initial poll interval and the exponential when checking the import status
-        of a collection, since the default is relatively slow.'
-      - ansible-config has new 'validate' option to find mispelled/forgein configurations
-        in ini file or environment variables.
-      - ansible-doc - show examples in role entrypoint argument specs (https://github.com/ansible/ansible/pull/82671).
-      - ansible-galaxy - Handle authentication errors and token expiration
-      - ansible-test - Add Ubuntu 24.04 remote.
-      - ansible-test - Add support for Python 3.13.
-      - ansible-test - An ``ansible_core.egg-info`` directory is no longer generated
-        when running tests.
-      - ansible-test - Connection options can be set for ansible-test managed remote
-        Windows instances.
-      - ansible-test - Improve the error message shown when an unknown ``--remote``
-        or ``--docker`` option is given.
-      - ansible-test - Remove Python 2.7 compatibility imports.
-      - ansible-test - Removed the ``vyos/1.1.8`` network remote as it is no longer
-        functional.
-      - ansible-test - Replace Alpine 3.19 container and remote with Alpine 3.20.
-      - ansible-test - Replace Fedora 39 container and remote with Fedora 40.
-      - ansible-test - Replace FreeBSD 14.0 remote with FreeBSD 14.1.
-      - ansible-test - Replace RHEL 9.3 remote with RHEL 9.4.
-      - ansible-test - Replace Ubuntu 20.04 container with Ubuntu 24.04 container.
-      - ansible-test - The ``empty-init`` sanity test no longer applies to ``module_utils``
-        packages.
-      - ansible-test - Update ``ansible-test-utility-container`` to version 3.1.0.
-      - ansible-test - Update ``base`` and ``default`` containers to omit Python 3.7.
-      - ansible-test - Update ``coverage`` to version 7.6.1.
-      - ansible-test - Update ``http-test-container`` to version 3.0.0.
-      - ansible-test - Update ``nios-test-container`` to version 5.0.0.
-      - ansible-test - Update ``pypi-test-container`` to version 3.2.0.
-      - ansible-test - Updated the frozen requirements for all sanity tests.
-      - ansible-test - Upgrade ``pip`` used in ansible-test managed virtual environments
-        from version 24.0 to 24.2.
-      - ansible-test - Virtual environments created by ansible-test no longer include
-        the ``wheel`` or ``setuptools`` packages.
-      - ansible-test - update HTTP test container to 3.2.0 (https://github.com/ansible/ansible/pull/83469).
-      - ansible.log now also shows log severity field
-      - distribution.py - Added SL-Micro in Suse OS Family. (https://github.com/ansible/ansible/pull/83541)
-      - dnf - minor internal changes in how the errors from the dnf API are handled;
-        rely solely on the exceptions rather than inspecting text embedded in them
-      - dnf - remove legacy code for unsupported dnf versions
-      - dnf5 - implement ``enable_plugin`` and ``disable_plugin`` options
-      - fact gathering - Gather /proc/sysinfo facts on s390 Linux on Z
-      - facts - add systemd version and features
-      - find - change the datatype of ``elements`` to ``path`` in option ``paths``
-        (https://github.com/ansible/ansible/pull/83575).
-      - ini lookup - add new ``interpolation`` option (https://github.com/ansible/ansible/issues/83755)
-      - isidentifier - remove unwanted Python 2 specific code.
-      - loop_control - add a break_when option to to break out of a task loop early
-        based on Jinja2 expressions (https://github.com/ansible/ansible/issues/83442).
-      - package_facts module now supports using aliases for supported package managers,
-        for example managers=yum or managers=dnf will resolve to using the underlying
-        rpm.
-      - plugins, deprecations and warnings concerning configuration are now displayed
-        to the user, technical issue that prevented 'de-duplication' have been resolved.
-      - psrp - Remove connection plugin extras vars lookup. This should have no affect
-        on existing users as all options have been documented.
-      - remove extraneous selinux import (https://github.com/ansible/ansible/issues/83657).
-      - replace random with secrets library.
-      - rpm_key - allow validation of gpg key with a subkey fingerprint
-      - rpm_key - enable gpg validation that requires presence of multiple fingerprints
-      - service_mgr - add support for dinit service manager (https://github.com/ansible/ansible/pull/83489).
-      - task timeout now returns timedout key with frame/code that was in execution
-        when the timeout is triggered.
-      - timedout test for checking if a task result represents a 'timed out' task.
-      - unarchive - Remove Python 2.7 compatibility imports.
-      - validate-modules sanity test - detect if names of an option (option name +
-        aliases) do not match between argument spec and documentation (https://github.com/ansible/ansible/issues/83598,
-        https://github.com/ansible/ansible/pull/83599).
-      - validate-modules sanity test - reject option/aliases names that are identical
-        up to casing but belong to different options (https://github.com/ansible/ansible/pull/83530).
-      - vaulted_file test filter added, to test if the provided path is an 'Ansible
-        vaulted' file
-      - yum_repository - add ``excludepkgs`` alias to the ``exclude`` option.
-      release_summary: '| Release Date: 2024-09-24
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-      removed_features:
-      - Play - removed deprecated ``ROLE_CACHE`` property in favor of ``role_cache``.
-      - Remove deprecated `VariableManager._get_delegated_vars` method (https://github.com/ansible/ansible/issues/82950)
-      - Removed Python 3.10 as a supported version on the controller. Python 3.11
-        or newer is required.
-      - Removed support for setting the ``vars`` keyword to lists of dictionaries.
-        It is now required to be a single dictionary.
-      - loader - remove deprecated non-inclusive words (https://github.com/ansible/ansible/issues/82947).
-      - paramiko_ssh - removed deprecated ssh_args from the paramiko_ssh connection
-        plugin (https://github.com/ansible/ansible/issues/82939).
-      - paramiko_ssh - removed deprecated ssh_common_args from the paramiko_ssh connection
-        plugin (https://github.com/ansible/ansible/issues/82940).
-      - paramiko_ssh - removed deprecated ssh_extra_args from the paramiko_ssh connection
-        plugin (https://github.com/ansible/ansible/issues/82941).
-      - play_context - remove deprecated PlayContext.verbosity property (https://github.com/ansible/ansible/issues/82945).
-      - utils/listify - remove deprecated 'loader' argument from listify_lookup_plugin_terms
-        API (https://github.com/ansible/ansible/issues/82949).
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.0b1_summary.yaml
-    - 42960_vault_password.yml
-    - 46314.yml
-    - 46742-atomic_move-fix-setgid.yml
-    - 62151-loop_control-until.yml
-    - 64092-get_url_verify_tmpsrc_checksum.yml
-    - 72321_git.yml
-    - 81770-add-uid-guid-minmax-keys.yml
-    - 82075.yml
-    - 82307-handlers-lockstep-linear-fix.yml
-    - 82490_creating_user_dir_using_tilde_always_reports_changed.yml
-    - 82535-properly-quote-shell.yml
-    - 82671-ansible-doc-role-examples.yml
-    - 82708-unsafe-plugin-name-error.yml
-    - 82831_countme_yum_repository.yml
-    - 82878-fetch-dest-is-dir.yml
-    - 82941.yml
-    - 82946.yml
-    - 82947.yml
-    - 83019-linear-handlers-lockstep-fix.yml
-    - 83031.yml
-    - 83155-ansible-doc-paragraphs.yml
-    - 83235-copy-module-update-mtime.yml
-    - 83294-meta-host_pinned-affinity.yml
-    - 83327.yml
-    - 83331.yml
-    - 83373-dnf5-wildcard.yml
-    - 83392-fix-memory-issues-handlers.yml
-    - 83406-dnf-fix-arch-cmp.yml
-    - 83447-end_host-rescue-rc.yml
-    - 83457-service_facts-openbsd-dont-crash-in-equals.yml
-    - 83469-http-test-container.yml
-    - 83480-fix-support-discard.yml
-    - 83498-command-tb-env.yml
-    - 83508_mount_facts.yml
-    - 83530-validate-modules-casing.yml
-    - 83540-update_disto_version.yml
-    - 83541-add-sl-micro-suse-family.yaml
-    - 83575-fix-sanity-ignore-for-find.yml
-    - 83599-validate-modules-aliases.yml
-    - 83601-debconf-normalize-bools.yml
-    - 83619-loop-label-register.yml
-    - 83716-enable-subkey-fingerprint-validation-in-rpm-key-module.yml
-    - 83755-ini-new-interpolation-option.yml
-    - 83803-collection-import-poll-interval.yml
-    - 83831-runtime-metadata-fix.yml
-    - 83874-include-parse-error-location.yml
-    - 83960-dnf5-state-installed-fix.yml
-    - PowerShell-AddType-temp.yml
-    - action-plugin-docs-sidecar.yml
-    - add_systemd_facts.yml
-    - ansible-config-validate.yml
-    - ansible-doc-color.yml
-    - ansible-doc-inicate.yml
-    - ansible-doc.yml
-    - ansible-drop-python-3.7.yml
-    - ansible-galaxy-install-archive-url-timeout.yml
-    - ansible-galaxy-install-help.yml
-    - ansible-galaxy-role-install-symlink.yml
-    - ansible-test-container-update.yml
-    - ansible-test-coverage-update.yml
-    - ansible-test-error-message-improvement.yml
-    - ansible-test-http-test-container-update.yml
-    - ansible-test-nios-container.yml
-    - ansible-test-no-egg-info.yml
-    - ansible-test-platform-updates.yml
-    - ansible-test-pylint-py-version.yml
-    - ansible-test-pypi-test-container-update.yml
-    - ansible-test-sanity-empty-init.yml
-    - ansible-test-sanity-test-requirements.yml
-    - ansible-test-utility-container-update.yml
-    - ansible-test-venv-bootstrap.yml
-    - ansible-test-vyos.yml
-    - ansible-test-windows-remote.yml
-    - ansible_connection_path.yml
-    - ansible_managed_restore.yml
-    - apk_package_facts.yml
-    - apt_cache.yml
-    - assemble.yml
-    - atomic_update_perms_time.yml
-    - become-runas-system.yml
-    - cleanup-outdated-galaxy-install-info.yml
-    - colors_for_included_events.yml
-    - config_init_fix.yml
-    - correct-callback-fqcn-old-style-action-invocation.yml
-    - correct_connection_callback.yml
-    - darwin_facts.yml
-    - delay_type.yml
-    - deprecate-safe-evals.yml
-    - dinit.yml
-    - display_fix_log_severity.yml
-    - dnf-exceptions-vs-text.yml
-    - dnf-installroot-substitutions.yml
-    - dnf-remove-legacy-code.yml
-    - dnf5-api-breaks.yml
-    - dnf5-enable-disable-plugins.yml
-    - dnf_cache_path.yml
-    - dnf_handle_downloaderror.yml
-    - dwim_is_role_fix_task_relative.yml
-    - empty_log_path.yml
-    - enabled_runtime.yml
-    - end_role.yml
-    - extras_fix.yml
-    - fetch-filename.yml
-    - file_hardlink.yml
-    - fix-inconsistent-csvfile-missing-search-error.yml
-    - fix-module-defaults-deprecations.yml
-    - fix_floating_ints.yml
-    - fix_log_verbosity.yml
-    - freebsd_disk_regex.yml
-    - freebsd_facts_refactor.yml
-    - freebsd_service.yml
-    - galaxy-reauth-error-handling.yml
-    - gather-s390-sysinfo.yml
-    - gather_facts_single.yml
-    - getoffmylawn.yml
-    - hostvars_fix.yml
-    - isidentifier.yml
-    - known_hosts_module_args.yml
-    - language.yml
-    - linear_started_name.yml
-    - linux_network_get.yml
-    - listify.yml
-    - local_facts_d.yml
-    - mask_me.yml
-    - mc_fix.yml
-    - package_facts_aliases.yml
-    - package_facts_warnings.yml
-    - powershell-clixml.yml
-    - psrp-extras.yml
-    - psrp-version-req.yml
-    - python-3.13.yml
-    - raw_clean_msg.yml
-    - remove-deprecated-gather-facts-config.yml
-    - remove-deprecated-get_delegated_vars.yml
-    - remove-deprecated-role-cache.yml
-    - remove-deprecated-vars-syntax.yml
-    - remove-python-2-compat.yml
-    - remove-python3.10-controller-support.yml
-    - replace_regex.yml
-    - secrets.yml
-    - selinux_import.yml
-    - service_facts_systemd_fix.yml
-    - shell-environment.yml
-    - ssh-windows.yml
-    - suppress-paramiko-warnings.yml
-    - sysctl_fact_fix.yml
-    - systemd_facts.yml
-    - timedout_test.yml
-    - timeout_show_frame.yml
-    - unarchive_differs.yml
-    - unarchive_timestamp.yml
-    - unsafe-fixes-2.yml
-    - unsafe-intern.yml
-    - uri_follow_redirect.yml
-    - v2.18.0-initial-commit.yaml
-    - vaulted_file_and_fixes.yml
-    - vmware_facts.yml
-    - winrm-quota.yml
-    - yum_repository.yml
-    modules:
-    - description: Retrieve mount information.
-      name: mount_facts
-      namespace: lib.ansible.modules
-    plugins:
-      test:
-      - description: did the task time out
-        name: timedout
-        namespace: null
-      - description: Is this file an encrypted vault
-        name: vaulted_file
-        namespace: null
-    release_date: '2024-09-24'
-  2.18.0rc1:
-    changes:
-      bugfixes:
-      - Errors now preserve stacked error messages even when YAML is involved.
-      - Fix disabling SSL verification when installing collections and roles from
-        git repositories. If ``--ignore-certs`` isn't provided, the value for the
-        ``GALAXY_IGNORE_CERTS`` configuration option will be used (https://github.com/ansible/ansible/issues/83326).
-      - Improve performance on large inventories by reducing the number of implicit
-        meta tasks.
-      - Use the requested error message in the ansible.module_utils.facts.timeout
-        timeout function instead of hardcoding one.
-      - '``package``/``dnf`` action plugins - provide the reason behind the failure
-        to gather the ``ansible_pkg_mgr`` fact to identify the package backend'
-      - ansible-test - Enable the ``sys.unraisablehook`` work-around for the ``pylint``
-        sanity test on Python 3.11. Previously the work-around was only enabled for
-        Python 3.12 and later. However, the same issue has been discovered on Python
-        3.11.
-      - debconf - set empty password values (https://github.com/ansible/ansible/issues/83214).
-      - dnf5 - fix traceback when ``enable_plugins``/``disable_plugins`` is used on
-        ``python3-libdnf5`` versions that do not support this functionality
-      - facts - skip if distribution file path is directory, instead of raising error
-        (https://github.com/ansible/ansible/issues/84006).
-      - user module now avoids changing ownership of files symlinked in provided home
-        dir skeleton
-      minor_changes:
-      - ansible-test - Default to Python 3.13 in the ``base`` and ``default`` containers.
-      - ansible-test - Disable the ``deprecated-`` prefixed ``pylint`` rules as their
-        results vary by Python version.
-      - ansible-test - Improve container runtime probe error handling. When unexpected
-        probe output is encountered, an error with more useful debugging information
-        is provided.
-      - ansible-test - Update ``pylint`` sanity test to use version 3.3.1.
-      - ansible-test - Update the ``base`` and ``default`` containers.
-      release_summary: '| Release Date: 2024-10-14
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.0rc1_summary.yaml
-    - ansible-test-probe-error-handling.yml
-    - ansible-test-pylint-fix.yml
-    - ansible-test-update.yml
-    - debconf_empty_password.yml
-    - dnf5-plugins-compat.yml
-    - fix-ansible-galaxy-ignore-certs.yml
-    - fix-module-utils-facts-timeout.yml
-    - fix_errors.yml
-    - os_family.yml
-    - package-dnf-action-plugins-facts-fail-msg.yml
-    - skip-implicit-flush_handlers-no-notify.yml
-    - user_action_fix.yml
-    release_date: '2024-10-14'
-  2.18.0rc2:
-    changes:
-      bugfixes:
-      - user action will now require O(force) to overwrite the public part of an ssh
-        key when generating ssh keys, as was already the case for the private part.
-      release_summary: '| Release Date: 2024-10-29
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-      security_fixes:
-      - include_vars action - Ensure that result masking is correctly requested when
-        vault-encrypted files are read. (CVE-2024-8775)
-      - task result processing - Ensure that action-sourced result masking (``_ansible_no_log=True``)
-        is preserved. (CVE-2024-8775)
-      - user action won't allow ssh-keygen, chown and chmod to run on existing ssh
-        public key file, avoiding traversal on existing symlinks (CVE-2024-9902).
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.0rc2_summary.yaml
-    - cve-2024-8775.yml
-    - user_ssh_fix.yml
-    release_date: '2024-10-29'
-  2.18.1:
-    changes:
-      release_summary: '| Release Date: 2024-12-02
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.1_summary.yaml
-    release_date: '2024-12-02'
-  2.18.1rc1:
-    changes:
-      bugfixes:
-      - Fix returning 'unreachable' for the overall task result. This prevents false
-        positives when a looped task has unignored unreachable items (https://github.com/ansible/ansible/issues/84019).
-      - ansible-test - Fix traceback that occurs after an interactive command fails.
-      - dnf5 - fix installing a package using ``state=latest`` when a binary of the
-        same name as the package is already installed (https://github.com/ansible/ansible/issues/84259)
-      - dnf5 - matching on a binary can be achieved only by specifying a full path
-        (https://github.com/ansible/ansible/issues/84334)
-      - runas become - Fix up become logic to still get the SYSTEM token with the
-        most privileges when running as SYSTEM.
-      minor_changes:
-      - ansible-test - When detection of the current container network fails, a warning
-        is now issued and execution continues. This simplifies usage in cases where
-        the current container cannot be inspected, such as when running in GitHub
-        Codespaces.
-      release_summary: '| Release Date: 2024-11-25
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-      security_fixes:
-      - Templating will not prefer AnsibleUnsafe when a variable is referenced via
-        hostvars - CVE-2024-11079
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.1rc1_summary.yaml
-    - 84019-ignore_unreachable-loop.yml
-    - 84259-dnf5-latest-fix.yml
-    - 84334-dnf5-consolidate-settings.yml
-    - ansible-test-fix-command-traceback.yml
-    - ansible-test-network-detection.yml
-    - become-runas-system-deux.yml
-    - unsafe_hostvars_fix.yml
-    release_date: '2024-11-25'
-  2.18.2:
-    changes:
-      release_summary: '| Release Date: 2025-01-27
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.2_summary.yaml
-    release_date: '2025-01-27'
-  2.18.2rc1:
-    changes:
+      - Support for the ``toml`` library has been removed from TOML inventory parsing
+        and dumping. Use ``tomli`` for parsing on Python 3.10. Python 3.11 and later
+        have built-in support for parsing. Use ``tomli-w`` to support outputting inventory
+        in TOML format.
+      - assert - The ``quiet`` argument must be a commonly-accepted boolean value.
+        Previously, unrecognized values were silently treated as False.
+      - conditionals - Conditional expressions that result in non-boolean values are
+        now an error by default. Such results often indicate unintentional use of
+        templates where they are not supported, resulting in a conditional that is
+        always true. When this option is enabled, conditional expressions which are
+        a literal ``None`` or empty string will evaluate as true, for backwards compatibility.
+        The error can be temporarily changed to a deprecation warning by enabling
+        the ``ALLOW_BROKEN_CONDITIONALS`` config option.
+      - first_found lookup - When specifying ``files`` or ``paths`` as a templated
+        list containing undefined values, the undefined list elements will be discarded
+        with a warning. Previously, the entire list would be discarded without any
+        warning.
+      - internals - The ``AnsibleLoader`` and ``AnsibleDumper`` classes for working
+        with YAML are now factory functions and cannot be extended.
+      - internals - The ``ansible.utils.native_jinja`` Python module has been removed.
+      - lookup plugins - Lookup plugins called as `with_(lookup)` will no longer have
+        the `_subdir` attribute set.
+      - lookup plugins - ``terms`` will always be passed to ``run`` as the first positional
+        arg, where previously it was sometimes passed as a keyword arg when using
+        ``with_`` syntax.
+      - loops - Omit placeholders no longer leak between loop item templating and
+        task templating. Previously, ``omit`` placeholders could remain embedded in
+        loop items after templating and be used as an ``omit`` for task templating.
+        Now, values resolving to ``omit`` are dropped immediately when loop items
+        are templated. To turn missing values into an ``omit`` for task templating,
+        use ``| default(omit)``. This solution is backward-compatible with previous
+        versions of ansible-core.
+      - modules - Ansible modules using ``sys.excepthook`` must use a standard ``try/except``
+        instead.
+      - plugins - Any plugin that sources or creates templates must properly tag them
+        as trusted.
+      - plugins - Custom Jinja plugins that accept undefined top-level arguments must
+        opt in to receiving them.
+      - plugins - Custom Jinja plugins that use ``environment.getitem`` to retrieve
+        undefined values will now trigger a ``MarkerError`` exception. This exception
+        must be handled to allow the plugin to return a ``Marker``, or the plugin
+        must opt-in to accepting ``Marker`` values.
+      - public API - The ``ansible.vars.fact_cache.FactCache`` wrapper has been removed.
+      - serialization of ``omit`` sentinel - Serialization of variables containing
+        ``omit`` sentinels (e.g., by the ``to_json`` and ``to_yaml`` filters or ``ansible-inventory``)
+        will fail if the variable has not completed templating. Previously, serialization
+        succeeded with placeholder strings emitted in the serialized output.
+      - set_fact - The string values "yes", "no", "true" and "false" were previously
+        converted (ignoring case) to boolean values when not using Jinja2 native mode.
+        Since Jinja2 native mode is always used, this conversion no longer occurs.
+        When boolean values are required, native boolean syntax should be used where
+        variables are defined, such as in YAML. When native boolean syntax is not
+        an option, the ``bool`` filter can be used to parse string values into booleans.
+      - template lookup - The ``convert_data`` option is deprecated and no longer
+        has any effect. Use the ``from_json`` filter on the lookup result instead.
+      - templating - Access to ``_`` prefixed attributes and methods, and methods
+        with known side effects, is no longer permitted. In cases where a matching
+        mapping key is present, the associated value will be returned instead of an
+        error. This increases template environment isolation and ensures more consistent
+        behavior between the ``.`` and ``[]`` operators.
+      - templating - Conditionals and lookups which use embedded inline templates
+        in Jinja string constants now display a warning. These templates should be
+        converted to their expression equivalent.
+      - templating - Many Jinja plugins (filters, lookups, tests) and methods previously
+        silently ignored undefined inputs, which often masked subtle errors. Passing
+        an undefined argument to a Jinja plugin or method that does not declare undefined
+        support now results in an undefined value.
+      - templating - Templates are always rendered in Jinja2 native mode. As a result,
+        non-string values are no longer automatically converted to strings.
+      - templating - Templates resulting in ``None`` are no longer automatically converted
+        to an empty string.
+      - templating - Templates with embedded inline templates that were not contained
+        within a Jinja string constant now result in an error, as support for multi-pass
+        templating was removed for security reasons. In most cases, such templates
+        can be easily rewritten to avoid the use of embedded inline templates.
+      - templating - The ``allow_unsafe_lookups`` option no longer has any effect.
+        Lookup plugins are responsible for tagging strings containing templates to
+        allow evaluation as a template.
+      - templating - The result of the ``range()`` global function cannot be returned
+        from a template- it should always be passed to a filter (e.g., ``random``).
+        Previously, range objects returned from an intermediate template were always
+        converted to a list, which is inconsistent with inline consumption of range
+        objects.
+      - templating - ``#jinja2:`` overrides in templates with invalid override names
+        or types are now templating errors.
       bugfixes:
       - Ansible will now also warn when reserved keywords are set via a module (set_fact,
         include_vars, etc).
       - Ansible.Basic - Fix ``required_if`` check when the option value to check is
         unset or set to null.
+      - Correctly return ``False`` when using the ``filter`` and ``test`` Jinja tests
+        on plugin names which are not filters or tests, respectively. (resolves issue
+        https://github.com/ansible/ansible/issues/82084)
+      - Do not run implicit ``flush_handlers`` meta tasks when the whole play is excluded
+        from the run due to tags specified.
+      - Errors now preserve stacked error messages even when YAML is involved.
+      - Fix a display.debug statement with the wrong param in _get_diff_data() method
+      - Fix disabling SSL verification when installing collections and roles from
+        git repositories. If ``--ignore-certs`` isn't provided, the value for the
+        ``GALAXY_IGNORE_CERTS`` configuration option will be used (https://github.com/ansible/ansible/issues/83326).
+      - Fix ipv6 pattern bug in lib/ansible/parsing/utils/addresses.py (https://github.com/ansible/ansible/issues/84237)
+      - Fix returning 'unreachable' for the overall task result. This prevents false
+        positives when a looped task has unignored unreachable items (https://github.com/ansible/ansible/issues/84019).
+      - 'Implicit ``meta: flush_handlers`` tasks now have a parent block to prevent
+        potential tracebacks when calling methods like ``get_play()`` on them internally.'
+      - Improve performance on large inventories by reducing the number of implicit
+        meta tasks.
+      - Jinja plugins - Errors raised will always be derived from ``AnsibleTemplatePluginError``.
+      - Optimize the way tasks from within ``include_tasks``/``include_role`` are
+        inserted into the play.
+      - Time out waiting on become is an unreachable error (https://github.com/ansible/ansible/issues/84468)
       - Use consistent multiprocessing context for action write locks
+      - Use the requested error message in the ansible.module_utils.facts.timeout
+        timeout function instead of hardcoding one.
+      - Windows - add support for running on system where WDAC is in audit mode with
+        ``Dynamic Code Security`` enabled.
+      - YAML parsing - The `!unsafe` tag no longer coerces non-string scalars to strings.
+      - "``ansible-galaxy`` \u2014 the collection dependency resolver now treats version
+        specifiers starting with ``!=`` as unpinned."
+      - '``package``/``dnf`` action plugins - provide the reason behind the failure
+        to gather the ``ansible_pkg_mgr`` fact to identify the package backend'
+      - action plugins - Action plugins that raise unhandled exceptions no longer
+        terminate playbook loops. Previously, exceptions raised by an action plugin
+        caused abnormal loop termination and loss of loop iteration results.
+      - ansible-config - format galaxy server configs while dumping in JSON format
+        (https://github.com/ansible/ansible/issues/84840).
+      - ansible-doc - If none of the files in files exists, path will be undefined
+        and a direct reference will throw an UnboundLocalError (https://github.com/ansible/ansible/pull/84464).
+      - ansible-galaxy - Small adjustments to URL building for ``download_url`` and
+        relative redirects.
+      - ansible-pull change detection will now work independently of callback or result
+        format settings.
+      - ansible-test - Enable the ``sys.unraisablehook`` work-around for the ``pylint``
+        sanity test on Python 3.11. Previously the work-around was only enabled for
+        Python 3.12 and later. However, the same issue has been discovered on Python
+        3.11.
+      - ansible-test - Ensure CA certificates are installed on managed FreeBSD instances.
+      - ansible-test - Fix support for PowerShell module_util imports with the ``-Optional``
+        flag.
+      - ansible-test - Fix support for detecting PowerShell modules importing module
+        utils with the newer ``#AnsibleRequires`` format.
+      - ansible-test - Fix traceback that occurs after an interactive command fails.
       - ansible-test - Fix up coverage reporting to properly translate the temporary
         path of integration test modules to the expected static test module path.
+      - ansible-test - Fixed traceback when handling certain YAML errors in the ``yamllint``
+        sanity test.
+      - ansible-test - Managed macOS instances now use the ``sudo_chdir`` option for
+        the ``sudo`` become plugin to avoid permission errors when dropping privileges.
       - ansible-vault will now correctly handle `--prompt`, previously it would issue
         an error about stdin if no 2nd argument was passed
+      - ansible_uptime_second - added ansible_uptime_seconds fact support for AIX
+        (https://github.com/ansible/ansible/pull/84321).
+      - apt_key module - prevent tests from running when apt-key was removed
+      - base.yml - deprecated libvirt_lxc_noseclabel config.
+      - build - Pin ``wheel`` in ``pyproject.toml`` to ensure compatibility with supported
+        ``setuptools`` versions.
+      - config - various fixes to config lookup plugin (https://github.com/ansible/ansible/pull/84398).
+      - copy - refactor copy module for simplicity.
       - copy action now prevents user from setting internal options.
+      - debconf - set empty password values (https://github.com/ansible/ansible/issues/83214).
+      - debug - hide loop vars in debug var display (https://github.com/ansible/ansible/issues/65856).
+      - default callback - Error context is now shown for failing tasks that use the
+        ``debug`` action.
+      - display - The ``Display.deprecated`` method once again properly handles the
+        ``removed=True`` argument (https://github.com/ansible/ansible/issues/82358).
+      - distro - add support for Linux Mint Debian Edition (LMDE) (https://github.com/ansible/ansible/issues/84934).
+      - distro - detect Debian as os_family for LMDE 6 (https://github.com/ansible/ansible/issues/84934).
+      - dnf5 - Handle forwarded exceptions from dnf5-5.2.13 where a generic ``RuntimeError``
+        was previously raised
+      - dnf5 - fix ``is_installed`` check for packages that are not installed but
+        listed as provided by an installed package (https://github.com/ansible/ansible/issues/84578)
+      - dnf5 - fix installing a package using ``state=latest`` when a binary of the
+        same name as the package is already installed (https://github.com/ansible/ansible/issues/84259)
+      - dnf5 - fix traceback when ``enable_plugins``/``disable_plugins`` is used on
+        ``python3-libdnf5`` versions that do not support this functionality
+      - dnf5 - libdnf5 - use ``conf.pkg_gpgcheck`` instead of deprecated ``conf.gpgcheck``
+        which is used only as a fallback
+      - dnf5 - matching on a binary can be achieved only by specifying a full path
+        (https://github.com/ansible/ansible/issues/84334)
+      - facts - gather pagesize and calculate respective values depending upon architecture
+        (https://github.com/ansible/ansible/issues/84773).
+      - facts - skip if distribution file path is directory, instead of raising error
+        (https://github.com/ansible/ansible/issues/84006).
+      - find - skip ENOENT error code while recursively enumerating files. find module
+        will now be tolerant to race conditions that remove files or directories from
+        the target it is currently inspecting. (https://github.com/ansible/ansible/issues/84873).
+      - first_found lookup - Corrected return value documentation to reflect None
+        (not empty string) for no files found.
       - gather_facts action now defaults to `ansible.legacy.setup` if `smart` was
         set, no network OS was found and no other alias for `setup` was present.
       - gather_facts action will now issues errors and warnings as appropriate if
         a network OS is detected but no facts modules are defined for it.
+      - gather_facts action, will now add setup when 'smart' appears with other modules
+        in the FACTS_MODULES setting (#84750).
+      - get_url - add support for BSD-style checksum digest file (https://github.com/ansible/ansible/issues/84476).
+      - get_url - fix honoring ``filename`` from the ``content-disposition`` header
+        even when the type is ``inline`` (https://github.com/ansible/ansible/issues/83690)
+      - host_group_vars - fixed defining the 'key' variable if the get_vars method
+        is called with cache=False (https://github.com/ansible/ansible/issues/84384)
+      - include_vars - fix including previously undefined hash variables with hash_behaviour
+        merge (https://github.com/ansible/ansible/issues/84295).
+      - iptables - Allows the wait parameter to be used with iptables chain creation
+        (https://github.com/ansible/ansible/issues/84490)
+      - linear strategy - fix executing ``end_role`` meta tasks for each host, instead
+        of handling these as implicit run_once tasks (https://github.com/ansible/ansible/issues/84660).
+      - local connection plugin - Become timeout errors now include all received data.
+        Previously, the most recently-received data was discarded.
+      - local connection plugin - Ensure ``become`` success validation always occurs,
+        even when an active plugin does not set ``prompt``.
+      - local connection plugin - Fixed cases where the internal ``BECOME-SUCCESS``
+        message appeared in task output.
+      - local connection plugin - Fixed hang or spurious failure when data arrived
+        concurrently on stdout and stderr during a successful ``become`` operation
+        validation.
+      - local connection plugin - Fixed hang when a become plugin expects a prompt
+        but a password was not provided.
+      - local connection plugin - Fixed hang when an active become plugin incorrectly
+        signals lack of prompt.
+      - local connection plugin - Fixed hang when an internal become read timeout
+        expired before the password prompt was written.
+      - local connection plugin - Fixed hang when only one of stdout or stderr was
+        closed by the ``become_exe`` subprocess.
+      - local connection plugin - Fixed long timeout/hang for ``become`` plugins that
+        repeat their prompt on failure (e.g., ``sudo``, some ``su`` implementations).
+      - local connection plugin - Fixed silent ignore of ``become`` failures and loss
+        of task output when data arrived concurrently on stdout and stderr during
+        ``become`` operation validation.
+      - local connection plugin - Fixed task output header truncation when post-become
+        data arrived before ``become`` operation validation had completed.
+      - lookup plugins - The ``terms`` arg to the ``run`` method is now always a list.
+        Previously, there were cases where a non-list could be received.
+      - module arg templating - When using a templated raw task arg and a templated
+        ``args`` keyword, args are now merged. Previously use of templated raw task
+        args silently ignored all values from the templated ``args`` keyword.
+      - module defaults - Module defaults are no longer templated unless they are
+        used by a task that does not override them. Previously, all module defaults
+        for all modules were templated for every task.
+      - module respawn - limit to supported Python versions
+      - package_facts module when using 'auto' will return the first package manager
+        found that provides an output, instead of just the first one, as this can
+        be foreign and not have any packages.
+      - psrp - Improve stderr parsing when running raw commands that emit error records
+        or stderr lines.
+      - regex_search filter - Corrected return value documentation to reflect None
+        (not empty string) for no match.
+      - respawn - use copy of env variables to update existing PYTHONPATH value (https://github.com/ansible/ansible/issues/84954).
+      - runas become - Fix up become logic to still get the SYSTEM token with the
+        most privileges when running as SYSTEM.
+      - sequence lookup - sequence query/lookups without positional arguments now
+        return a valid list if their kwargs comprise a valid sequence expression (https://github.com/ansible/ansible/issues/82921).
+      - service_facts - skip lines which does not contain service names in openrc
+        output (https://github.com/ansible/ansible/issues/84512).
       - ssh - Improve the logic for parsing CLIXML data in stderr when working with
         Windows host. This fixes issues when the raw stderr contains invalid UTF-8
         byte sequences and improves embedded CLIXML sequences.
+      - ssh - Raise exception when sshpass returns error code (https://github.com/ansible/ansible/issues/58133).
       - ssh - connection options were incorrectly templated during ``reset_connection``
         tasks (https://github.com/ansible/ansible/pull/84238).
-      release_summary: '| Release Date: 2025-01-20
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
+      - stability - Fixed silent process failure on unhandled IOError/OSError under
+        ``linear`` strategy.
+      - su become plugin - Ensure generated regex from ``prompt_l10n`` config values
+        is properly escaped.
+      - su become plugin - Ensure that password prompts are correctly detected in
+        the presence of leading output. Previously, this case resulted in a timeout
+        or hang.
+      - su become plugin - Ensure that trailing colon is expected on all ``prompt_l10n``
+        config values.
+      - sudo become plugin - The `sudo_chdir` config option allows the current directory
+        to be set to the specified value before executing sudo to avoid permission
+        errors when dropping privileges.
+      - sunos - remove hard coding of virtinfo command in facts gathering code (https://github.com/ansible/ansible/pull/84357).
+      - to_yaml/to_nice_yaml filters - Eliminated possibility of keyword arg collisions
+        with internally-set defaults.
+      - unarchive - Clamp timestamps from beyond y2038 to representible values when
+        unpacking zip files on platforms that use 32-bit time_t (e.g. Debian i386).
+      - uri - Form location correctly when the server returns a relative redirect
+        (https://github.com/ansible/ansible/issues/84540)
+      - uri - Handle HTTP exceptions raised while reading the content (https://github.com/ansible/ansible/issues/83794).
+      - uri - mark ``url`` as required (https://github.com/ansible/ansible/pull/83642).
+      - user - Create Buildroot subclass as alias to Busybox (https://github.com/ansible/ansible/issues/83665).
+      - user - Set timeout for passphrase interaction.
+      - user - Update prompt for SSH key passphrase (https://github.com/ansible/ansible/issues/84484).
+      - user - Use higher precedence HOME_MODE as UMASK for path provided (https://github.com/ansible/ansible/pull/84482).
+      - user action will now require O(force) to overwrite the public part of an ssh
+        key when generating ssh keys, as was already the case for the private part.
+      - user module now avoids changing ownership of files symlinked in provided home
+        dir skeleton
+      - vars lookup - The ``default`` substitution only applies when trying to look
+        up a variable which is not defined. If the variable is defined, but templates
+        to an undefined value, the ``default`` substitution will not apply. Use the
+        ``default`` filter to coerce those values instead.
+      - wait_for_connection - a warning was displayed if any hosts used a local connection
+        (https://github.com/ansible/ansible/issues/84419)
+      deprecated_features:
+      - CLI - The ``--inventory-file`` option alias is deprecated. Use the ``-i``
+        or ``--inventory`` option instead.
+      - Strategy Plugins - Use of strategy plugins not provided in ``ansible.builtin``
+        are deprecated and do not carry any backwards compatibility guarantees going
+        forward. A future release will remove the ability to use external strategy
+        plugins. No alternative for third party strategy plugins is currently planned.
+      - '``ansible.module_utils.compat.datetime`` - The datetime compatibility shims
+        are now deprecated. They are scheduled to be removed in ``ansible-core`` v2.21.
+        This includes ``UTC``, ``utcfromtimestamp()`` and ``utcnow`` importable from
+        said module (https://github.com/ansible/ansible/pull/81874).'
+      - bool filter - Support for coercing unrecognized input values (including None)
+        has been deprecated. Consult the filter documentation for acceptable values,
+        or consider use of the ``truthy`` and ``falsy`` tests.
+      - cache plugins - The `ansible.plugins.cache.base` Python module is deprecated.
+        Use `ansible.plugins.cache` instead.
+      - callback plugins - The `v2_on_any` callback method is deprecated. Use specific
+        callback methods instead.
+      - callback plugins - The v1 callback API (callback methods not prefixed with
+        `v2_`) is deprecated. Use `v2_` prefixed methods instead.
+      - conditionals - Conditionals using Jinja templating delimiters (e.g., ``{{``,
+        ``{%``) should be rewritten as expressions without delimiters, unless the
+        entire conditional value is a single template that resolves to a trusted string
+        expression. This is useful for dynamic indirection of conditional expressions,
+        but is limited to trusted literal string expressions.
+      - config - The ``ACTION_WARNINGS`` config has no effect. It previously disabled
+        command warnings, which have since been removed.
+      - config - The ``DEFAULT_JINJA2_NATIVE`` option has no effect. Jinja2 native
+        mode is now the default and only option.
+      - config - The ``DEFAULT_NULL_REPRESENTATION`` option has no effect. Null values
+        are no longer automatically converted to another value during templating of
+        single variable references.
+      - display - The ``Display.get_deprecation_message`` method has been deprecated.
+        Call ``Display.deprecated`` to display a deprecation message, or call it with
+        ``removed=True`` to raise an ``AnsibleError``.
+      - file loading - Loading text files with ``DataLoader`` containing data that
+        cannot be decoded under the expected encoding is deprecated. In most cases
+        the encoding must be UTF-8, although some plugins allow choosing a different
+        encoding. Previously, invalid data was silently wrapped in Unicode surrogate
+        escape sequences, often resulting in later errors or other data corruption.
+      - first_found lookup - Splitting of file paths on ``,;:`` is deprecated. Pass
+        a list of paths instead. The ``split`` method on strings can be used to split
+        variables into a list as needed.
+      - interpreter discovery - The ``auto_legacy`` and ``auto_legacy_silent`` options
+        for ``INTERPRETER_PYTHON`` are deprecated. Use ``auto`` or ``auto_silent``
+        options instead, as they have the same effect.
+      - oneline callback - The ``oneline`` callback and its associated ad-hoc CLI
+        args (``-o``, ``--one-line``) are deprecated.
+      - paramiko - The paramiko connection plugin has been deprecated with planned
+        removal in 2.21.
+      - playbook variables - The ``play_hosts`` variable has been deprecated, use
+        ``ansible_play_batch`` instead.
+      - plugin error handling - The ``AnsibleError`` constructor arg ``suppress_extended_error``
+        is deprecated. Using ``suppress_extended_error=True`` has the same effect
+        as ``show_content=False``.
+      - template lookup - The jinja2_native option is no longer used in the Ansible
+        Core code base. Jinja2 native mode is now the default and only option.
+      - templating - Support for enabling Jinja2 extensions (not plugins) has been
+        deprecated.
+      - templating - The ``disable_lookups`` option has no effect, since plugins must
+        be updated to apply trust before any templating can be performed.
+      - tree callback - The ``tree`` callback and its associated ad-hoc CLI args (``-t``,
+        ``--tree``) are deprecated.
+      major_changes:
+      - Jinja plugins - Jinja builtin filter and test plugins are now accessible via
+        their fully-qualified names ``ansible.builtin.{name}``.
+      - Task Execution / Forks - Forks no longer inherit stdio from the parent ``ansible-playbook``
+        process. ``stdout``, ``stderr``, and ``stdin`` within a worker are detached
+        from the terminal, and non-functional. All needs to access stdio from a fork
+        for controller side plugins requires use of ``Display``.
+      - ansible-test - Packages beneath ``module_utils`` can now contain ``__init__.py``
+        files.
+      - variables - The type system underlying Ansible's variable storage has been
+        significantly overhauled and formalized. Attempts to store unsupported Python
+        object types in variables now more consistently yields early warnings or errors.
+      - variables - To support new Ansible features, many variable objects are now
+        represented by subclasses of their respective native Python types. In most
+        cases, they behave indistinguishably from their original types, but some Python
+        libraries do not handle builtin object subclasses properly. Custom plugins
+        that interact with such libraries may require changes to convert and pass
+        the native types.
+      minor_changes:
+      - Added a -vvvvv log message indicating when a host fails to produce output
+        within the timeout period.
+      - AnsibleModule.uri - Add option ``multipart_encoding`` for ``form-multipart``
+        files in body to change default base64 encoding for files
+      - INVENTORY_IGNORE_EXTS config, removed ``ini`` from the default list, inventory
+        scripts using a corresponding .ini configuration are rare now and inventory.ini
+        files are more common. Those that need to ignore the ini files for inventory
+        scripts can still add it to configuration.
+      - Jinja plugins - Plugins can declare support for undefined values.
+      - Jinja2 version 3.1.0 or later is now required on the controller.
+      - Move ``follow_redirects`` parameter to module_utils so external modules can
+        reuse it.
+      - PlayIterator - do not return tasks from already executed roles so specific
+        strategy plugins do not have to do the filtering of such tasks themselves
+      - SSH Escalation-related -vvv log messages now include the associated host information.
+      - Windows - Add support for Windows Server 2025 to Ansible and as an ``ansible-test``
+        remote target - https://github.com/ansible/ansible/issues/84229
+      - Windows - refactor the async implementation to better handle errors during
+        bootstrapping and avoid WMI when possible.
+      - "``ansible-galaxy collection install`` \u2014 the collection dependency resolver
+        now prints out conflicts it hits during dependency resolution when it's taking
+        too long and it ends up backtracking a lot. It also displays suggestions on
+        how to help it compute the result more quickly."
+      - 'ansible, ansible-console, ansible-pull - add --flush-cache option (https://github.com/ansible/ansible/issues/83749).
 
         '
-    codename: Fool in the Rain
+      - ansible-galaxy - Add support for Keycloak service accounts
+      - ansible-galaxy - support ``resolvelib >= 0.5.3, < 2.0.0`` (https://github.com/ansible/ansible/issues/84217).
+      - ansible-test - Added a macOS 15.3 remote VM, replacing 14.3.
+      - ansible-test - Automatically retry HTTP GET/PUT/DELETE requests on exceptions.
+      - ansible-test - Default to Python 3.13 in the ``base`` and ``default`` containers.
+      - ansible-test - Disable the ``deprecated-`` prefixed ``pylint`` rules as their
+        results vary by Python version.
+      - ansible-test - Disable the ``pep8`` sanity test rules ``E701`` and ``E704``
+        to improve compatibility with ``black``.
+      - ansible-test - Improve container runtime probe error handling. When unexpected
+        probe output is encountered, an error with more useful debugging information
+        is provided.
+      - ansible-test - Replace container Alpine 3.20 with 3.21.
+      - ansible-test - Replace container Fedora 40 with 41.
+      - ansible-test - Replace remote Alpine 3.20 with 3.21.
+      - ansible-test - Replace remote Fedora 40 with 41.
+      - ansible-test - Replace remote FreeBSD 13.3 with 13.5.
+      - ansible-test - Replace remote FreeBSD 14.1 with 14.2.
+      - ansible-test - Replace remote RHEL 9.4 with 9.5.
+      - ansible-test - Show a more user-friendly error message when a ``runme.sh``
+        script is not executable.
+      - ansible-test - The ``yamllint`` sanity test now enforces string values for
+        the ``!vault`` tag.
+      - ansible-test - Update ``nios-test-container`` to version 7.0.0.
+      - ansible-test - Update ``pylint`` sanity test to use version 3.3.1.
+      - ansible-test - Update distro containers to remove unnecessary packages (apache2,
+        subversion, ruby).
+      - ansible-test - Update sanity test requirements to latest available versions.
+      - ansible-test - Update the HTTP test container.
+      - ansible-test - Update the PyPI test container.
+      - ansible-test - Update the ``base`` and ``default`` containers.
+      - ansible-test - Update the utility container.
+      - ansible-test - Use Python's ``urllib`` instead of ``curl`` for HTTP requests.
+      - ansible-test - When detection of the current container network fails, a warning
+        is now issued and execution continues. This simplifies usage in cases where
+        the current container cannot be inspected, such as when running in GitHub
+        Codespaces.
+      - ansible-test acme test container - bump `version to 2.3.0 <https://github.com/ansible/acme-test-container/releases/tag/2.3.0>`__
+        to include newer versions of Pebble, dependencies, and runtimes. This adds
+        support for ACME profiles, ``dns-account-01`` support, and some smaller improvements
+        (https://github.com/ansible/ansible/pull/84547).
+      - apt_key module - add notes to docs and errors to point at the CLI tool deprecation
+        by Debian and alternatives
+      - apt_repository module - add notes to errors to point at the CLI tool deprecation
+        by Debian and alternatives
+      - become plugins get new property 'pipelining' to show support or lack there
+        of for the feature.
+      - callback plugins - add has_option() to CallbackBase to match other functions
+        overloaded from AnsiblePlugin
+      - callback plugins - fix get_options() for CallbackBase
+      - copy - fix sanity test failures (https://github.com/ansible/ansible/pull/83643).
+      - copy - parameter ``local_follow`` was incorrectly documented as having default
+        value ``True`` (https://github.com/ansible/ansible/pull/83643).
+      - cron - Provide additional error information while writing cron file (https://github.com/ansible/ansible/issues/83223).
+      - csvfile - let the config system do the typecasting (https://github.com/ansible/ansible/pull/82263).
+      - display - Deduplication of warning and error messages considers the full content
+        of the message (including source and traceback contexts, if enabled). This
+        may result in fewer messages being omitted.
+      - distribution - Added openSUSE MicroOS to Suse OS family (#84685).
+      - dnf5, apt - add ``auto_install_module_deps`` option (https://github.com/ansible/ansible/issues/84206)
+      - docs - add collection name in message from which the module is being deprecated
+        (https://github.com/ansible/ansible/issues/84116).
+      - env lookup - The error message generated for a missing environment variable
+        when ``default`` is an undefined value (e.g. ``undef('something')``) will
+        contain the hint from that undefined value, except when the undefined value
+        is the default of ``undef()`` with no arguments. Previously, any existing
+        undefined hint would be ignored.
+      - file - enable file module to disable diff_mode (https://github.com/ansible/ansible/issues/80817).
+      - file - make code more readable and simple.
+      - filter - add support for URL-safe encoding and decoding in b64encode and b64decode
+        (https://github.com/ansible/ansible/issues/84147).
+      - find - add a checksum_algorithm parameter to specify which type of checksum
+        the module will return
+      - from_json filter - The filter accepts a ``profile`` argument, which defaults
+        to ``tagless``.
+      - handlers - Templated handler names with syntax errors, or that resolve to
+        ``omit`` are now skipped like handlers with undefined variables in their name.
+      - improved error message for yaml parsing errors in plugin documentation
+      - local connection plugin - A new ``become_strip_preamble`` config option (default
+        True) was added; disable to preserve diagnostic ``become`` output in task
+        results.
+      - local connection plugin - A new ``become_success_timeout`` operation-wide
+        timeout config (default 10s) was added for ``become``.
+      - local connection plugin - When a ``become`` plugin's ``prompt`` value is a
+        non-string after the ``check_password_prompt`` callback has completed, no
+        prompt stripping will occur on stderr.
+      - lookup_template - add an option to trim blocks while templating (https://github.com/ansible/ansible/issues/75962).
+      - module - set ipv4 and ipv6 rules simultaneously in iptables module (https://github.com/ansible/ansible/issues/84404).
+      - module_utils - Add ``NoReturn`` type annotations to functions which never
+        return.
+      - modules - PowerShell modules can now receive ``datetime.date``, ``datetime.time``
+        and ``datetime.datetime`` values as ISO 8601 strings.
+      - modules - PowerShell modules can now receive strings sourced from inline vault-encrypted
+        strings.
+      - modules - Unhandled exceptions during Python module execution are now returned
+        as structured data from the target. This allows the new traceback handling
+        to be applied to exceptions raised on targets.
+      - pipelining logic has mostly moved to connection plugins so they can decide/override
+        settings.
+      - plugin error handling - When raising exceptions in an exception handler, be
+        sure to use ``raise ... from`` as appropriate. This supersedes the use of
+        the ``AnsibleError`` arg ``orig_exc`` to represent the cause. Specifying ``orig_exc``
+        as the cause is still permitted. Failure to use ``raise ... from`` when ``orig_exc``
+        is set will result in a warning. Additionally, if the two cause exceptions
+        do not match, a warning will be issued.
+      - removed hardcoding of su plugin as it now works with pipelining.
+      - runtime-metadata sanity test - improve validation of ``action_groups`` (https://github.com/ansible/ansible/pull/83965).
+      - service_facts module got freebsd support added.
+      - ssh connection plugin - Support ``SSH_ASKPASS`` mechanism to provide passwords,
+        making it the default, but still offering an explicit choice to use ``sshpass``
+        (https://github.com/ansible/ansible/pull/83936)
+      - ssh connection plugin now overrides pipelining when a tty is requested.
+      - ssh-agent - ``ansible``, ``ansible-playbook`` and ``ansible-console`` are
+        capable of spawning or reusing an ssh-agent, allowing plugins to interact
+        with the ssh-agent. Additionally a pure python ssh-agent client has been added,
+        enabling easy interaction with the agent. The ssh connection plugin contains
+        new functionality via ``ansible_ssh_private_key`` and ``ansible_ssh_private_key_passphrase``,
+        for loading an SSH private key into the agent from a variable.
+      - templating - Access to an undefined variable from inside a lookup, filter,
+        or test (which raises MarkerError) no longer ends processing of the current
+        template. The triggering undefined value is returned as the result of the
+        offending plugin invocation, and the template continues to execute.
+      - templating - Embedding ``range()`` values in containers such as lists will
+        result in an error on use. Previously the value would be converted to a string
+        representing the range parameters, such as ``range(0, 3)``.
+      - templating - Handling of omitted values is now a first-class feature of the
+        template engine, and is usable in all Ansible Jinja template contexts. Any
+        template that resolves to ``omit`` is automatically removed from its parent
+        container during templating.
+      - templating - Template evaluation is lazier than in previous versions. Template
+        expressions which resolve only portions of a data structure no longer result
+        in the entire structure being templated.
+      - templating - Templating errors now provide more information about both the
+        location and context of the error, especially for deeply-nested and/or indirected
+        templating scenarios.
+      - templating - Unified ``omit`` behavior now requires that plugins calling ``Templar.template()``
+        handle cases where the entire template result is omitted, by catching the
+        ``AnsibleValueOmittedError`` that is raised. Previously, this condition caused
+        a randomly-generated string marker to appear in the template result.
+      - templating - Variables of type ``set`` and ``tuple`` are now converted to
+        ``list`` when exiting the final pass of templating.
+      - to_json / to_nice_json filters - The filters accept a ``profile`` argument,
+        which defaults to ``tagless``.
+      - troubleshooting - Tracebacks can be collected and displayed for most errors,
+        warnings, and deprecation warnings (including those generated by modules).
+        Tracebacks are no longer enabled with ``-vvv``; the behavior is directly configurable
+        via the ``DISPLAY_TRACEBACK`` config option. Module tracebacks passed to ``fail_json``
+        via the ``exception`` kwarg will not be included in the task result unless
+        error tracebacks are configured.
+      - undef jinja function - The ``undef`` jinja function now raises an error if
+        a non-string hint is given. Attempting to use an undefined hint also results
+        in an error, ensuring incorrect use of the function can be distinguished from
+        the function's normal behavior.
+      - validate-modules sanity test - make sure that ``module`` and ``plugin`` ``seealso``
+        entries use FQCNs (https://github.com/ansible/ansible/pull/84325).
+      - vault - improved vault filter documentation by adding missing example content
+        for dump_template_data.j2, refining examples for clarity, and ensuring variable
+        consistency (https://github.com/ansible/ansible/issues/83583).
+      - warnings - All warnings (including deprecation warnings) issued during a task's
+        execution are now accessible via the ``warnings`` and ``deprecations`` keys
+        on the task result.
+      - when the ``dict`` lookup is given a non-dict argument, show the value of the
+        argument and its type in the error message.
+      - windows - add hard minimum limit for PowerShell to 5.1. Ansible dropped support
+        for older versions of PowerShell in the 2.16 release but this requirement
+        is now enforced at runtime.
+      - windows - refactor windows exec runner to improve efficiency and add better
+        error reporting on failures.
+      - winrm - Remove need for pexpect on macOS hosts when using ``kinit`` to retrieve
+        the Kerberos TGT. By default the code will now only use the builtin ``subprocess``
+        library which should handle issues with select and a high fd count and also
+        simplify the code.
+      release_summary: '| Release Date: 2025-04-14
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+      removed_features:
+      - Remove deprecated plural form of collection path (https://github.com/ansible/ansible/pull/84156).
+      - Removed deprecated STRING_CONVERSION_ACTION (https://github.com/ansible/ansible/issues/84220).
+      - encrypt - passing unsupported passlib hashtype now raises AnsibleFilterError.
+      - manager - remove deprecated include_delegate_to parameter from get_vars API.
+      - modules - Modules returning non-UTF8 strings now result in an error. The ``MODULE_STRICT_UTF8_RESPONSE``
+        setting can be used to disable this check.
+      - removed deprecated pycompat24 and compat.importlib.
+      - selector - remove deprecated compat.selector related files (https://github.com/ansible/ansible/pull/84155).
+      - windows - removed common module functions ``ConvertFrom-AnsibleJson``, ``Format-AnsibleException``
+        from Windows modules as they are not used and add unneeded complexity to the
+        code.
+      security_fixes:
+      - include_vars action - Ensure that result masking is correctly requested when
+        vault-encrypted files are read. (CVE-2024-8775)
+      - task result processing - Ensure that action-sourced result masking (``_ansible_no_log=True``)
+        is preserved. (CVE-2024-8775)
+      - templating - Ansible's template engine no longer processes Jinja templates
+        in strings unless they are marked as coming from a trusted source. Untrusted
+        strings containing Jinja template markers are ignored with a warning. Examples
+        of trusted sources include playbooks, vars files, and many inventory sources.
+        Examples of untrusted sources include module results and facts. Plugins which
+        have not been updated to preserve trust while manipulating strings may inadvertently
+        cause them to lose their trusted status.
+      - templating - Changes to conditional expression handling removed numerous instances
+        of insecure multi-pass templating (which could result in execution of untrusted
+        template expressions).
+      - user action won't allow ssh-keygen, chown and chmod to run on existing ssh
+        public key file, avoiding traversal on existing symlinks (CVE-2024-9902).
+    codename: What Is and What Should Never Be
     fragments:
-    - 2.18.2rc1_summary.yaml
+    - 2.19.0b1_summary.yaml
+    - 81709-ansible-galaxy-slow-resolution-hints.yml
+    - 81812-ansible-galaxy-negative-spec-is-pinned.yml
+    - 81874-deprecate-datetime-compat.yml
+    - 83642-fix-sanity-ignore-for-uri.yml
+    - 83643-fix-sanity-ignore-for-copy.yml
+    - 83690-get_url-content-disposition-filename.yml
+    - 83700-enable-file-disable-diff.yml
+    - 83757-deprecate-paramiko.yml
+    - 83936-ssh-askpass.yml
+    - 83965-action-groups-schema.yml
+    - 84008-additional-logging.yml
+    - 84019-ignore_unreachable-loop.yml
+    - 84149-add-flush-cache-for-adhoc-commands.yml
+    - 84206-dnf5-apt-auto-install-module-deps.yml
+    - 84213-ansible-galaxy-url-building.yml
+    - 84229-windows-server-2025.yml
     - 84238-fix-reset_connection-ssh_executable-templated.yml
+    - 84259-dnf5-latest-fix.yml
+    - 84321-added-ansible_uptime_seconds_aix.yml
+    - 84325-validate-modules-seealso-fqcn.yml
+    - 84334-dnf5-consolidate-settings.yml
+    - 84384-fix-undefined-key-host-group-vars.yml
+    - 84419-fix-wait_for_connection-warning.yml
+    - 84468-timeout_become_unreachable.yml
+    - 84473-dict-lookup-type-error-message.yml
+    - 84490-allow-iptables-chain-creation-with-wait.yml
+    - 84496-CallbackBase-get_options.yml
+    - 84540-uri-relative-redirect.yml
+    - 84547-acme-test-container.yml
+    - 84578-dnf5-is_installed-provides.yml
+    - 84660-fix-meta-end_role-linear-strategy.yml
+    - 84685-add-opensuse-microos.yml
+    - 84705-error-message-malformed-plugin-documentation.yml
+    - 84725-deprecate-strategy-plugins.yml
     - Ansible.Basic-required_if-null.yml
+    - ansible-galaxy-keycloak-service-accounts.yml
+    - ansible-test-added-macos-15.3.yml
+    - ansible-test-containers.yml
     - ansible-test-coverage-test-files.yml
+    - ansible-test-curl.yml
+    - ansible-test-fix-command-traceback.yml
+    - ansible-test-freebsd-nss.yml
+    - ansible-test-network-detection.yml
+    - ansible-test-nios-container.yml
+    - ansible-test-no-exec-script.yml
+    - ansible-test-probe-error-handling.yml
+    - ansible-test-pylint-fix.yml
+    - ansible-test-remotes.yml
+    - ansible-test-update.yml
+    - apt_key_bye.yml
+    - become-runas-system-deux.yml
+    - buildroot.yml
+    - compat_removal.yml
+    - config.yml
+    - config_dump.yml
     - copy_validate_input.yml
+    - cron_err.yml
+    - csvfile-col.yml
+    - cve-2024-8775.yml
+    - darwin_pagesize.yml
+    - debconf_empty_password.yml
+    - deprecated.yml
+    - distro_LMDE_6.yml
+    - dnf5-exception-forwarding.yml
+    - dnf5-plugins-compat.yml
+    - dnf5-remove-usage-deprecated-option.yml
+    - feature-uri-add-option-multipart-encoding.yml
+    - file_simplify.yml
+    - find-checksum.yml
+    - find_enoent.yml
+    - fix-ansible-galaxy-ignore-certs.yml
+    - fix-cli-doc-path_undefined.yaml
+    - fix-display-bug-in-action-plugin.yml
+    - fix-include_vars-merge-hash.yml
+    - fix-ipv6-pattern.yml
+    - fix-is-filter-is-test.yml
+    - fix-lookup-sequence-keyword-args-only.yml
+    - fix-module-utils-facts-timeout.yml
+    - fix_errors.yml
+    - follow_redirects_url.yml
     - gather_facts_netos_fixes.yml
+    - gather_facts_smart_fix.yml
+    - get_url_bsd_style_digest.yml
+    - hide-loop-vars-debug-vars.yml
+    - implicit_flush_handlers_parents.yml
+    - include_delegate_to.yml
+    - interpreter-discovery-auto-legacy.yml
+    - jinja-version.yml
+    - libvirt_lxc.yml
+    - local-become-fixes.yml
+    - lookup_config.yml
     - macos-correct-lock.yml
+    - no-inherit-stdio.yml
+    - no-return.yml
+    - openrc-status.yml
+    - os_family.yml
+    - package-dnf-action-plugins-facts-fail-msg.yml
+    - package_facts_fix.yml
+    - passlib.yml
+    - pin-wheel.yml
+    - pipelining_refactor.yml
+    - playiterator-add_tasks-optimize.yml
+    - ps-import-sanity.yml
+    - pull_changed_fix.yml
+    - remove_ini_ignored_dir.yml
     - reserved_module_chekc.yml
+    - respawn-min-python.yml
+    - respawn_os_env.yml
+    - selector_removal.yml
+    - service_facts_fbsd.yml
+    - set_ipv4_and_ipv6_simultaneously.yml
+    - simplify-copy-module.yml
+    - skip-handlers-tagged-play.yml
+    - skip-implicit-flush_handlers-no-notify.yml
+    - skip-role-task-iterator.yml
+    - ssh-agent.yml
     - ssh-clixml.yml
+    - ssh_raise_exception.yml
+    - string_conversion.yml
+    - sunos_virtinfo.yml
+    - templates_types_datatagging.yml
+    - toml-library-support-dropped.yml
+    - trim_blocks.yml
+    - unarchive_timestamp_t32.yaml
+    - update-resolvelib-lt-2_0_0.yml
+    - uri_httpexception.yml
+    - url_safe_b64_encode_decode.yml
+    - user_action_fix.yml
+    - user_module.yml
+    - user_passphrase.yml
+    - user_ssh_fix.yml
+    - v2.19.0-initial-commit.yaml
     - vault_cli_fix.yml
-    release_date: '2025-01-20'
-  2.18.3:
-    changes:
-      release_summary: '| Release Date: 2025-02-24
-
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
-
-        '
-    codename: Fool in the Rain
-    fragments:
-    - 2.18.3_summary.yaml
-    release_date: '2025-02-24'
-  2.18.3rc1:
+    - vault_docs_fix.yaml
+    - win-async-refactor.yml
+    - win-wdac-audit.yml
+    - windows-exec.yml
+    - winrm-kinit-pexpect.yml
+    release_date: '2025-04-14'
+  2.19.0b2:
     changes:
       bugfixes:
-      - include_vars - fixed erroneous warning if an unreserved variable name contains
-        a single character that matches a reserved variable. (https://github.com/ansible/ansible/issues/84623)
-      - linear strategy - fix executing ``end_role`` meta tasks for each host, instead
-        of handling these as implicit run_once tasks (https://github.com/ansible/ansible/issues/84660).
+      - Remove use of `required` parameter in `get_bin_path` which has been deprecated.
+      - ansible-doc - fix indentation for first line of descriptions of suboptions
+        and sub-return values (https://github.com/ansible/ansible/pull/84690).
+      - ansible-doc - fix line wrapping for first line of description of options and
+        return values (https://github.com/ansible/ansible/pull/84690).
       minor_changes:
-      - ansible-test - Automatically retry HTTP GET/PUT/DELETE requests on exceptions.
-      - ansible-test - Use Python's ``urllib`` instead of ``curl`` for HTTP requests.
-      release_summary: '| Release Date: 2025-02-17
+      - comment filter - Improve the error message shown when an invalid ``style``
+        argument is provided.
+      release_summary: '| Release Date: 2025-04-24
 
-        | `Porting Guide <https://docs.ansible.com/ansible-core/2.18/porting_guides/porting_guide_core_2.18.html>`__
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
 
         '
-    codename: Fool in the Rain
+    codename: What Is and What Should Never Be
     fragments:
-    - 2.18.3rc1_summary.yaml
-    - 84660-fix-meta-end_role-linear-strategy.yml
-    - ansible-test-curl.yml
-    - fix-include_vars-reserved-warning.yml
-    release_date: '2025-02-17'
+    - 2.19.0b2_summary.yaml
+    - 84690-ansible-doc-indent-wrapping.yml
+    - comment_fail.yml
+    - get_bin_path-remove-use-of-deprecated-param.yml
+    release_date: '2025-04-23'
+  2.19.0b3:
+    changes:
+      bugfixes:
+      - Ansible will now ensure predictable permissions on remote artifacts, until
+        now it only ensured executable and relied on system masks for the rest.
+      - dnf5 - avoid generating excessive transaction entries in the dnf5 history
+        (https://github.com/ansible/ansible/issues/85046)
+      deprecated_features:
+      - Passing a ``warnings` or ``deprecations`` key to ``exit_json`` or ``fail_json``
+        is deprecated. Use ``AnsibleModule.warn`` or ``AnsibleModule.deprecate`` instead.
+      - plugins - Accessing plugins with ``_``-prefixed filenames without the ``_``
+        prefix is deprecated.
+      minor_changes:
+      - ansible-config will now show internal, but not test configuration entries.
+        This allows for debugging but still denoting the configurations as internal
+        use only (_ prefix).
+      - ansible-test - Improved ``pylint`` checks for Ansible-specific deprecation
+        functions.
+      - ansible-test - Use the ``-t`` option to set the stop timeout when stopping
+        a container. This avoids use of the ``--time`` option which was deprecated
+        in Docker v28.0.
+      - collection metadata - The collection loader now parses scalar values from
+        ``meta/runtime.yml`` as strings. This avoids issues caused by unquoted values
+        such as versions or dates being parsed as types other than strings.
+      - deprecation warnings - Deprecation warning APIs automatically capture the
+        identity of the deprecating plugin. The ``collection_name`` argument is only
+        required to correctly attribute deprecations that occur in module_utils or
+        other non-plugin code.
+      - deprecation warnings - Improved deprecation messages to more clearly indicate
+        the affected content, including plugin name when available.
+      - deprecations - Collection name strings not of the form ``ns.coll`` passed
+        to deprecation API functions will result in an error.
+      - deprecations - Removed support for specifying deprecation dates as a ``datetime.date``,
+        which was included in an earlier 2.19 pre-release.
+      - deprecations - Some argument names to ``deprecate_value`` for consistency
+        with existing APIs. An earlier 2.19 pre-release included a ``removal_`` prefix
+        on the ``date`` and ``version`` arguments.
+      - modules - The ``AnsibleModule.deprecate`` function no longer sends deprecation
+        messages to the target host's logging system.
+      release_summary: '| Release Date: 2025-05-06
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0b3_summary.yaml
+    - 85046-dnf5-history-entries.yml
+    - ansible-test-container-stop.yml
+    - config_priv.yml
+    - deprecator.yml
+    - ensure_remote_perms.yml
+    release_date: '2025-05-06'
+  2.19.0b4:
+    changes:
+      bugfixes:
+      - ansible-test - Updated the ``pylint`` sanity test to skip some deprecation
+        validation checks when all arguments are dynamic.
+      - config - Preserve or apply Origin tag to values returned by config.
+      - config - Prevented fatal errors when ``MODULE_IGNORE_EXTS`` configuration
+        was set.
+      - config - Templating failures on config defaults now issue a warning. Previously,
+        failures silently returned an unrendered and untrusted template to the caller.
+      - config - ``ensure_type`` correctly propagates trust and other tags on returned
+        values.
+      - config - ``ensure_type`` now converts mappings to ``dict`` when requested,
+        instead of returning the mapping.
+      - config - ``ensure_type`` now converts sequences to ``list`` when requested,
+        instead of returning the sequence.
+      - config - ``ensure_type`` now correctly errors when ``pathlist`` or ``pathspec``
+        types encounter non-string list items.
+      - config - ``ensure_type`` now reports an error when ``bytes`` are provided
+        for any known ``value_type``. Previously, the behavior was undefined, but
+        often resulted in an unhandled exception or incorrect return type.
+      - config - ``ensure_type`` with expected type ``int`` now properly converts
+        ``True`` and ``False`` values to ``int``. Previously, these values were silently
+        returned unmodified.
+      - convert_bool.boolean API conversion function - Unhashable values passed to
+        ``boolean`` behave like other non-boolean convertible values, returning False
+        or raising ``TypeError`` depending on the value of ``strict``. Previously,
+        unhashable values always raised ``ValueError`` due to an invalid set membership
+        check.
+      - dnf5 - when ``bugfix`` and/or ``security`` is specified, skip packages that
+        do not have any such updates, even for new versions of libdnf5 where this
+        functionality changed and it is considered failure
+      - plugin loader - Apply template trust to strings loaded from plugin configuration
+        definitions and doc fragments.
+      - template action - Template files where the entire file's output renders as
+        ``None`` are no longer emitted as the string "None", but instead render to
+        an empty file as in previous releases.
+      minor_changes:
+      - facts - add "CloudStack KVM Hypervisor" for Linux VM in virtual facts (https://github.com/ansible/ansible/issues/85089).
+      - modules - use ``AnsibleModule.warn`` instead of passing ``warnings`` to ``exit_json``
+        or ``fail_json`` which is deprecated.
+      release_summary: '| Release Date: 2025-05-12
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0b4_summary.yaml
+    - 85117-add-cloudstack-kvm-for-linux-facts.yml
+    - ansible-test-pylint-deprecated-fix.yml
+    - dnf5-advisory-type.yml
+    - ensure_type.yml
+    - plugin-loader-trust-docs.yml
+    - preserve_config_origin.yml
+    - remove-warnings-retval.yml
+    - template-none.yml
+    release_date: '2025-05-12'
+  2.19.0b5:
+    changes:
+      bugfixes:
+      - Core Jinja test plugins - Builtin test plugins now always return ``bool``
+        to avoid spurious deprecation warnings for some malformed inputs.
+      - ansible-test - Disabled the ``bad-super-call`` pylint rule due to false positives.
+      - ansible-test - Fix incorrect handling of options with optional args (e.g.
+        ``--color``), when followed by other options which are omitted during arg
+        filtering (e.g. ``--docker``). Previously it was possible for non-option arguments
+        to be incorrectly omitted in these cases. (https://github.com/ansible/ansible/issues/85173)
+      - ansible-test - Improve type inference for pylint deprecated checks to accommodate
+        some type annotations.
+      - async_status module - The ``started`` and ``finished`` return values are now
+        ``True`` or ``False`` instead of ``1`` or ``0``.
+      - constructed inventory - Use the ``default_value`` or ``trailing_separator``
+        in a ``keyed_groups`` entry if the expression result of ``key`` is ``None``
+        and not just an empty string.
+      - dnf5 - handle all libdnf5 specific exceptions (https://github.com/ansible/ansible/issues/84634)
+      - error handling - Error details and tracebacks from connection and built-in
+        action exceptions are preserved. Previously, much of the detail was lost or
+        mixed into the error message.
+      - from_yaml_all filter - `None` and empty string inputs now always return an
+        empty list. Previously, `None` was returned in Jinja native mode and empty
+        list in classic mode.
+      - local connection plugin - The command-line used to create subprocesses is
+        now always ``str`` to avoid issues with debuggers and profilers.
+      - ssh agent - Fixed several potential startup hangs for badly-behaved or overloaded
+        ssh agents.
+      - task timeout - Specifying a negative task timeout now results in an error.
+      deprecated_features:
+      - The ``ShellModule.checksum`` method is now deprecated and will be removed
+        in ansible-core 2.23. Use ``ActionBase._execute_remote_stat()`` instead.
+      - The ``ansible.module_utils.common.collections.count()`` function is deprecated
+        and will be removed in ansible-core 2.23. Use ``collections.Counter()`` from
+        the Python standard library instead.
+      - '``ansible.compat.importlib_resources`` is deprecated and will be removed
+        in ansible-core 2.23. Use ``importlib.resources`` from the Python standard
+        library instead.'
+      minor_changes:
+      - Improved SUSE distribution detection in distribution.py by parsing VARIANT_ID
+        from /etc/os-release for identifying SLES_SAP and SL-Micro. Falls back to
+        /etc/products.d/baseproduct symlink for older systems.
+      - Remove unnecessary shebang from the ``hostname`` module.
+      - Use ``importlib.metadata.version()`` to detect Jinja version as jinja2.__version__
+        is deprecated and will be removed in Jinja 3.3.
+      - ansible-doc - Return dynamic stub when reporting on Jinja filters and tests
+        not explicitly documented in Ansible
+      - ansible-doc - Skip listing the internal ``ansible._protomatter`` plugins unless
+        explicitly requested
+      - ansible-test - Add RHEL 10.0 as a remote platform for testing.
+      - apt_repository - remove Python 2 support
+      - csvfile lookup - remove Python 2 compat
+      - display - Add ``help_text`` and ``obj`` to ``Display.error_as_warning``.
+      - display - Replace Windows newlines (``\r\n``) in display output with Unix
+        newlines (``\n``). This ensures proper display of strings sourced from Windows
+        hosts in environments which treat ``\r`` as ``\n``, such as Azure Pipelines.
+      - facts - add "Linode" for Linux VM in virtual facts
+      - module_utils - Add ``AnsibleModule.error_as_warning``.
+      - module_utils - Add ``ansible.module_utils.common.warnings.error_as_warning``.
+      - module_utils - Add optional ``help_text`` argument to ``AnsibleModule.warn``.
+      - ssh agent - Added ``SSH_AGENT_EXECUTABLE`` config to allow override of ssh-agent.
+      - ssh connection plugin - Added ``verbosity`` config to decouple SSH debug output
+        verbosity from Ansible verbosity. Previously, the Ansible verbosity value
+        was always applied to the SSH client command-line, leading to excessively
+        verbose output. Set the ``ANSIBLE_SSH_VERBOSITY`` envvar or ``ansible_ssh_verbosity``
+        Ansible variable to a positive integer to increase SSH client verbosity.
+      - task timeout - Specifying a timeout greater than 100,000,000 now results in
+        an error.
+      - templating - Added ``_ANSIBLE_TEMPLAR_SANDBOX_MODE=allow_unsafe_attributes``
+        environment variable to disable Jinja template attribute sandbox. (https://github.com/ansible/ansible/issues/85202)
+      - windows - Added support for ``#AnsibleRequires -Wrapper`` to request a PowerShell
+        module be run through the execution wrapper scripts without any module utils
+        specified.
+      - windows - Added support for running signed modules and scripts with a Windows
+        host protected by Windows App Control/WDAC. This is a tech preview and the
+        interface may be subject to change.
+      - windows - Script modules will preserve UTF-8 encoding when executing the script.
+      release_summary: '| Release Date: 2025-06-03
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0b5_summary.yaml
+    - 84634-dnf5-all-exceptions.yml
+    - 85184-add-linode-for-linux-facts.yml
+    - ansible-doc-jinja-builtins.yml
+    - ansible-doc-protomatter.yml
+    - ansible-test-delegation-options.yml
+    - ansible-test-pylint-fix-inference.yml
+    - ansible-test-rhel-10.yml
+    - apt_repository-remove-py2-compat.yml
+    - async_really_true.yml
+    - constructed-default-value.yml
+    - deprecate-compat-importlib-resources.yml
+    - deprecate-shell-checksum.yml
+    - detect-variantid-suse.yaml
+    - display-windows-newline.yml
+    - from_yaml_all.yml
+    - jinja2-__version__-deprecated.yml
+    - local_popen_text.yml
+    - lookup-csvfile-remove-py2-compat.yml
+    - module_utils-common-collections-counter-deprecated.yml
+    - module_utils_warnings.yml
+    - sandbox_config.yml
+    - ssh_agent_misc.yml
+    - ssh_verbosity.yml
+    - task-error-and-timeout.yml
+    - truthy_tests.yml
+    - unnecessary-shebang.yml
+    - windows-app-control.yml
+    release_date: '2025-06-03'
+  2.19.0b6:
+    changes:
+      bugfixes:
+      - Fix templating ``tags`` on plays and roles. (https://github.com/ansible/ansible/issues/69903)
+      - ansible-doc will no longer ignore docs for modules without an extension (https://github.com/ansible/ansible/issues/85279).
+      - display - Fix hang caused by early post-fork writers to stdout/stderr (e.g.,
+        pydevd) encountering an unreleased fork lock.
+      - get_url - add a check to recognize incomplete data transfers.
+      - include_tasks - fix templating options when used as a handler (https://github.com/ansible/ansible/pull/85015).
+      - templating - Fixed cases where template expression blocks halted prematurely
+        when a Jinja macro invocation returned an undefined value.
+      - templating - Jinja macros returned from a template expression can now be called
+        from another template expression.
+      minor_changes:
+      - ansiballz - Added an experimental AnsiballZ extension for remote debugging.
+      - ansiballz - Added support for AnsiballZ extensions.
+      - ansiballz - Moved AnsiballZ code coverage support into an extension.
+      - ansiballz - Refactored AnsiballZ and module respawn.
+      - template action and lookup plugin - The value of the ``ansible_managed`` variable
+        (if set) will not be masked by the ``template`` action and lookup. Previously,
+        the value calculated by the ``DEFAULT_MANAGED_STR`` configuration option always
+        masked the variable value during plugin execution, preventing runtime customization.
+      release_summary: '| Release Date: 2025-06-11
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0b6_summary.yaml
+    - 84825-get-url-incomplete-read.yml
+    - 85015-fix-handler-include_tasks-templating.yml
+    - adoc_noext_fix.yml
+    - ansiballz.yml
+    - macro_support.yml
+    - post_fork_stdio_deadlock.yml
+    - template-tags-on-play-roles.yml
+    - unmask_ansible_managed.yml
+    release_date: '2025-06-11'
+  2.19.0b7:
+    changes:
+      bugfixes:
+      - ansible-test - Fix Python relative import resolution from ``__init__.py``
+        files when using change detection.
+      - callback plugins - A more descriptive error is now raised if the stdout callback
+        plugin cannot be loaded.
+      - callback plugins - Callback plugins that do not extend ``ansible.plugins.callback.CallbackBase``
+        will fail to load with a warning. If the plugin is used as the stdout callback
+        plugin, this will also be a fatal error.
+      - callback plugins - Removed unused methods - runner_on_no_hosts, playbook_on_setup,
+        playbook_on_import_for_host, playbook_on_not_import_for_host, v2_playbook_on_cleanup_task_start,
+        v2_playbook_on_import_for_host, v2_playbook_on_not_import_for_host.
+      - callback plugins - The stdout callback plugin is no longer called twice if
+        it is also in the list of additional callback plugins.
+      - password lookup - fix acquiring the lock when human-readable FileExistsError
+        error message is not English.
+      - plugin loader - A warning is now emitted for any plugin which fails to load
+        due to a missing base class.
+      - variables - Added Jinja scalar singletons (``true``, ``false``, ``none``)
+        to invalid Ansible variable name detection. Previously, variables with these
+        names could be assigned without error, but could not be resolved.
+      deprecated_features:
+      - inventory plugins - Setting invalid Ansible variable names in inventory plugins
+        is deprecated.
+      - playbook syntax - Specifying the task ``args`` keyword without a value is
+        deprecated.
+      - playbook syntax - Using ``key=value`` args and the task ``args`` keyword on
+        the same task is deprecated.
+      - playbook syntax - Using a mapping with the ``action`` keyword is deprecated.
+        (https://github.com/ansible/ansible/issues/84101)
+      minor_changes:
+      - Added type annotations to the ``Role.__init__()`` method to enable type checking.
+        (https://github.com/ansible/ansible/pull/85346)
+      - ansible-test - Added experimental support for remote debugging.
+      - ansible-test - Added support for setting static environment variables in integration
+        tests using ``env/set/`` entries in the ``aliases`` file. For example, ``env/set/MY_KEY/MY_VALUE``
+        or ``env/set/MY_PATH//an/abs/path``.
+      - ansible-test - The ``shell`` command has been augmented to propagate remote
+        debug configurations and other test-related settings when running on the controller.
+        Use the ``--raw`` argument to bypass the additional environment configuration.
+      - apt - consider lock timeout while invoking apt-get command (https://github.com/ansible/ansible/issues/78658).
+      - assemble action added check_mode support
+      - display - The ``formatted`` arg to ``warning`` has no effect. Warning wrapping
+        is left to the consumer (e.g. terminal, browser).
+      - display - The ``wrap_text`` and ``stderr`` arguments to ``error`` have no
+        effect. Errors are always sent to stderr and wrapping is left to the consumer
+        (e.g. terminal, browser).
+      - module_utils.basic.backup_local enforces check_mode now
+      - variables - Removed restriction on usage of most Python keywords as Ansible
+        variable names.
+      - variables - Warnings about reserved variable names now show context where
+        the variable was defined.
+      release_summary: '| Release Date: 2025-06-24
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0b7_summary.yaml
+    - add_type_checking_to_role_init.yml
+    - ansible-test-change-detection-fix.yml
+    - ansible-test-debugging.yml
+    - ansible-test-env-set.yml
+    - apt_timeout.yml
+    - assemble_check_mode.yml
+    - callback_base.yml
+    - display_args.yml
+    - fix-lookup-password-lock-acquisition.yml
+    - task_esoterica_deprecation.yml
+    - variable_names.yml
+    - warn-on-reserved.yml
+    release_date: '2025-06-24'
+  2.19.0rc1:
+    changes:
+      bugfixes:
+      - Update automatic role argument spec validation to not use deprecated syntax
+        (https://github.com/ansible/ansible/issues/85399).
+      - ssh connection plugin - Allow only one password prompt attempt when utilizing
+        ``SSH_ASKPASS`` (https://github.com/ansible/ansible/issues/85359)
+      minor_changes:
+      - templating - Relaxed the Jinja sandbox to allow specific bitwise operations
+        which have no filter equivalent. The allowed methods are ``__and__``, ``__lshift__``,
+        ``__or__``, ``__rshift__``, ``__xor__``.
+      - templating - Switched from the Jinja immutable sandbox to the standard sandbox.
+        This restores the ability to use mutation methods such as ``list.append``
+        and ``dict.update``.
+      release_summary: '| Release Date: 2025-06-30
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0rc1_summary.yaml
+    - 85359-askpass-incorrect-password-retries.yml
+    - fix-auto-role-spec-validation-deprecation.yml
+    - template-sandbox.yml
+    release_date: '2025-06-30'
+  2.19.0rc2:
+    changes:
+      deprecated_features:
+      - Jinja test plugins - Returning a non-boolean result from a Jinja test plugin
+        is deprecated.
+      - YAML parsing - Usage of the YAML 1.1 ``!!omap`` and ``!!pairs`` tags is deprecated.
+        Use standard mappings instead.
+      - YAML parsing - Usage of the undocumented ``!vault-encrypted`` YAML tag is
+        deprecated. Use ``!vault`` instead.
+      - config - The ``DEFAULT_ALLOW_UNSAFE_LOOKUPS`` configuration option is deprecated
+        and no longer has any effect. Ansible templating no longer encounters situations
+        where use of lookup plugins is considered "unsafe".
+      - config - The ``DEFAULT_UNDEFINED_VAR_BEHAVIOR`` configuration option is deprecated
+        and no longer has any effect. Attempting to use an undefined variable where
+        undefined values are unexpected is now always an error. This behavior was
+        enabled by default in previous versions, and disabling it yielded inconsistent
+        results.
+      - config - The ``STRING_TYPE_FILTERS`` configuration option is deprecated and
+        no longer has any effect. Since the template engine now always preserves native
+        types, there is no longer a risk of unintended conversion from strings to
+        native types.
+      - config - Using the ``DEFAULT_JINJA2_EXTENSIONS`` configuration option to enable
+        Jinja2 extensions is deprecated. Previously, custom Jinja extensions were
+        disabled by default, as they can destabilize the Ansible templating environment.
+        Templates should only make use of filter, test and lookup plugins.
+      - config - Using the ``DEFAULT_MANAGED_STR`` configuration option to customize
+        the value of the ``ansible_managed`` variable is deprecated. The ``ansible_managed``
+        variable can now be set the same as any other variable.
+      - playbook - The ``timedout.frame`` task result value (injected when a task
+        timeout occurs) is deprecated. Include ``error`` in the ``DISPLAY_TRACEBACK``
+        config value to capture a full Python traceback for timed out actions.
+      - public API - The ``ansible.errors.AnsibleFilterTypeError`` exception type
+        has been deprecated. Use ``AnsibleTypeError`` instead.
+      - public API - The ``ansible.errors._AnsibleActionDone`` exception type has
+        been deprecated. Action plugins should return a task result dictionary in
+        success cases instead of raising.
+      - public API - The ``ansible.module_utils.common.json.json_dump`` function is
+        deprecated. Call Python stdlib ``json.dumps`` instead, with ``cls`` set to
+        an Ansible profile encoder type from ``ansible.module_utils.common.json.get_encoder``.
+      release_summary: '| Release Date: 2025-07-08
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.0rc2_summary.yaml
+    - 219_catchall.yml
+    release_date: '2025-07-08'
+  2.19.1:
+    changes:
+      release_summary: '| Release Date: 2025-08-25
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.1_summary.yaml
+    release_date: '2025-08-25'
+  2.19.1rc1:
+    changes:
+      bugfixes:
+      - ansible-test - Always exclude the ``tests/output/`` directory from a collection's
+        code coverage. (https://github.com/ansible/ansible/issues/84244)
+      - ansible-test - Limit package install retries during managed remote instance
+        bootstrapping.
+      - ansible-test - Use a consistent coverage config for all collection testing.
+      - argspec validation - The ``str`` argspec type treats ``None`` values as empty
+        string for better consistency with pre-2.19 templating conversions.
+      - conditionals - When displaying a broken conditional error or deprecation warning,
+        the origin of the non-boolean result is included (if available), and the raw
+        result is omitted.
+      - failed_when - When using ``failed_when`` to suppress an error, the ``exception``
+        key in the result is renamed to ``failed_when_suppressed_exception``. This
+        prevents the error from being displayed by callbacks after being suppressed.
+        (https://github.com/ansible/ansible/issues/85505)
+      - import_tasks - fix templating parent include arguments.
+      - plugins config, get_option_and_origin now correctly displays the value and
+        origin of the option.
+      - template lookup - Skip finalization on the internal templating operation to
+        allow markers to be returned and handled by, e.g. the ``default`` filter.
+        Previously, finalization tripped markers, causing an exception to end processing
+        of the current template pipeline. (https://github.com/ansible/ansible/issues/85674)
+      - templating - Avoid tripping markers within Jinja generated code. (https://github.com/ansible/ansible/issues/85674)
+      - templating - Ensure filter plugin result processing occurs under the correct
+        call context. (https://github.com/ansible/ansible/issues/85585)
+      - templating - Fix slicing of tuples in templating (https://github.com/ansible/ansible/issues/85606).
+      - templating - Multi-node template results coerce embedded ``None`` nodes to
+        empty string (instead of rendering literal ``None`` to the output).
+      - templating - Undefined marker values sourced from the Jinja ``getattr->getitem``
+        fallback are now accessed correctly, raising AnsibleUndefinedVariable for
+        user plugins that do not understand markers. Previously, these values were
+        erroneously returned to user plugin code that had not opted in to marker acceptance.
+      - tqm - use display.error_as_warning instead of display.warning_as_error.
+      - tqm - use display.error_as_warning instead of self.warning.
+      minor_changes:
+      - AnsibleModule - Add temporary internal monkeypatch-able hook to alter module
+        result serialization by splitting serialization from ``_return_formatted``
+        into ``_record_module_result``.
+      - ansible-test - Improve formatting of generated coverage config file.
+      - ansible-test - Use OS packages to satisfy controller requirements on FreeBSD
+        13.5 during managed instance bootstrapping.
+      - encrypt - check datatype of salt_size in password_hash filter.
+      - service_facts - handle keyerror exceptions with warning.
+      - service_facts - warn user about missing service details instead of ignoring.
+      release_summary: '| Release Date: 2025-08-18
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.1rc1_summary.yaml
+    - 85599-fix-templating-import_tasks-parent-include.yml
+    - ansible-test-bootstrap-retry.yml
+    - ansible-test-coverage-config.yml
+    - ansible-test-freebsd-bootstrap.yml
+    - concat_coerce_none_to_empty.yml
+    - elide_broken_conditional_result.yml
+    - failed-when-exception.yml
+    - getattr_marker_access.yml
+    - module_direct_exec.yml
+    - openrc.yml
+    - password_hash_encrypt.yml
+    - plugins_fix_origin.yml
+    - template-tuple-fix.yml
+    - template_lookup_skip_finalize.yml
+    - templating-filter-generators.yml
+    - tqm.yml
+    release_date: '2025-08-18'
+  2.19.2:
+    changes:
+      release_summary: '| Release Date: 2025-09-08
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.2_summary.yaml
+    release_date: '2025-09-08'
+  2.19.2rc1:
+    changes:
+      bugfixes:
+      - The ``ansible_failed_task`` variable is now correctly exposed in a rescue
+        section, even when a failing handler is triggered by the ``flush_handlers``
+        task in the corresponding ``block`` (https://github.com/ansible/ansible/issues/85682)
+      - '``ternary`` filter - evaluate values lazily (https://github.com/ansible/ansible/issues/85743)'
+      minor_changes:
+      - ansible-test - Implement new authentication methods for accessing the Ansible
+        Core CI service.
+      release_summary: '| Release Date: 2025-09-02
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.2rc1_summary.yaml
+    - 85682-rescue-flush_handlers.yml
+    - 85743-lazy-ternary.yml
+    - ansible-test-auth-update.yml
+    release_date: '2025-09-02'
+  2.19.3:
+    changes:
+      release_summary: '| Release Date: 2025-10-06
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.3_summary.yaml
+    release_date: '2025-10-06'
+  2.19.3rc1:
+    changes:
+      bugfixes:
+      - Windows async - Handle running PowerShell modules with trailing data after
+        the module result
+      - ansible-doc --list/--list_files/--metadata-dump - fixed relative imports in
+        nested filter/test plugin files (https://github.com/ansible/ansible/issues/85753).
+      - display - Fixed reference to undefined `_DeferredWarningContext` when issuing
+        early warnings during startup. (https://github.com/ansible/ansible/issues/85886)
+      - run_command - Fixed premature selector unregistration on empty read from stdout/stderr
+        that caused truncated output or hangs in rare situations.
+      - script inventory plugin will now show correct 'incorrect' type when doing
+        implicit conversions on groups.
+      minor_changes:
+      - fetch_file - add ca_path and cookies parameter arguments (https://github.com/ansible/ansible/issues/85172).
+      release_summary: '| Release Date: 2025-09-29
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.3rc1_summary.yaml
+    - display_internals.yml
+    - fetch_file.yml
+    - fix-listing-nested-filter-and-test-plugins.yml
+    - fix_script_error.yml
+    - run_command_output_selector.yml
+    - win_async-junk-output.yml
+    release_date: '2025-09-29'
+  2.19.4:
+    changes:
+      release_summary: '| Release Date: 2025-11-04
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.4_summary.yaml
+    release_date: '2025-11-04'
+  2.19.4rc1:
+    changes:
+      bugfixes:
+      - Fix issue where play tags prevented executing notified handlers (https://github.com/ansible/ansible/issues/85475)
+      - Fix issues with keywords being incorrectly validated on ``import_tasks`` (https://github.com/ansible/ansible/issues/85855,
+        https://github.com/ansible/ansible/issues/85856)
+      - Fix traceback when trying to import non-existing file via nested ``import_tasks``
+        (https://github.com/ansible/ansible/issues/69882)
+      - SIGINT/SIGTERM Handling - Make SIGINT/SIGTERM handling more robust by splitting
+        concerns between forks and the parent.
+      - Windows - ignore temporary file cleanup warning when using AnsibleModule to
+        compile C# utils. This should reduce the number of warnings that can safely
+        be ignored when running PowerShell modules - https://github.com/ansible/ansible/issues/85976
+      - ansible-doc - prevent crash when scanning collections in paths that have more
+        than one ``ansible_collections`` in it (https://github.com/ansible/ansible/issues/84909,
+        https://github.com/ansible/ansible/pull/85361).
+      - callback plugins - improve consistency accessing the Task object's resolved_action
+        attribute.
+      - config lookup now properly factors in variables and show_origin when checking
+        entries from the global configuration.
+      - option argument deprecations now have a proper alternative help text.
+      - package_facts - typecast bytes to string while returning facts (https://github.com/ansible/ansible/issues/85937).
+      - psrp - ReadTimeout exceptions now mark host as unreachable instead of fatal
+        (https://github.com/ansible/ansible/issues/85966)
+      release_summary: '| Release Date: 2025-10-29
+
+        | `Porting Guide <https://docs.ansible.com/ansible-core/2.19/porting_guides/porting_guide_core_2.19.html>`__
+
+        '
+    codename: What Is and What Should Never Be
+    fragments:
+    - 2.19.4rc1_summary.yaml
+    - 85361-collection-name-from-path-none.yml
+    - 85475-fix-flush_handlers-play-tags.yml
+    - 85524-resolve-task-resolved_action-early.yml
+    - 85966-psrp-readtimeout.yml
+    - add-type-warning.yml
+    - config_lookup_fix.yml
+    - fix-signal-propagation.yml
+    - import_tasks-fixes.yml
+    - option_deprecation_help.yml
+    - package_facts.yml
+    release_date: '2025-10-29'

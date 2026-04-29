@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 module: sysvinit
 author:
     - "Ansible Core Team"
@@ -77,9 +77,9 @@ notes:
     - The service names might vary by specific OS/distribution.
 requirements:
     - That the service managed has a corresponding init script.
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Make sure apache2 is started
   ansible.builtin.sysvinit:
       name: apache2
@@ -88,9 +88,9 @@ EXAMPLES = '''
 
 - name: Sleep for 5 seconds between stop and start command of badly behaving service
   ansible.builtin.sysvinit:
-    name: apache2
-    state: restarted
-    sleep: 5
+      name: apache2
+      state: restarted
+      sleep: 5
 
 - name: Make sure apache2 is started on runlevels 3 and 5
   ansible.builtin.sysvinit:
@@ -100,9 +100,9 @@ EXAMPLES = '''
       runlevels:
         - 3
         - 5
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 results:
     description: results from actions taken
     returned: always
@@ -131,7 +131,7 @@ results:
              "stdout": "Stopping web server: apache2.\n"
           }
         }
-'''
+"""
 
 import re
 from time import sleep

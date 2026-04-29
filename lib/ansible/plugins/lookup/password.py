@@ -126,6 +126,7 @@ _raw:
   elements: str
 """
 
+import contextlib
 import os
 import string
 import time
@@ -160,7 +161,7 @@ def _read_password_file(b_path):
 
 
 def _gen_candidate_chars(characters):
-    '''Generate a string containing all valid chars as defined by ``characters``
+    """Generate a string containing all valid chars as defined by ``characters``
 
     :arg characters: A list of character specs. The character specs are
         shorthand names for sets of characters like 'digits', 'ascii_letters',
@@ -181,7 +182,7 @@ def _gen_candidate_chars(characters):
     the question mark and pipe characters directly. Return will be the string::
 
         u'0123456789?|'
-    '''
+    """
     chars = []
     for chars_spec in characters:
         # getattr from string expands things like "ascii_letters" and "digits"
@@ -192,11 +193,11 @@ def _gen_candidate_chars(characters):
 
 
 def _parse_content(content):
-    '''parse our password data format into password and salt
+    """parse our password data format into password and salt
 
     :arg content: The data read from the file
     :returns: password and salt
-    '''
+    """
     password = content
     salt = None
     ident = None
@@ -269,15 +270,12 @@ def _get_lock(b_path):
     b_pathdir = os.path.dirname(b_path)
     lockfile_name = to_bytes("%s.ansible_lockfile" % hashlib.sha1(b_path).hexdigest())
     lockfile = os.path.join(b_pathdir, lockfile_name)
-    if not os.path.exists(lockfile) and b_path != to_bytes('/dev/null'):
-        try:
-            makedirs_safe(b_pathdir, mode=0o700)
+    if b_path != b'/dev/null':
+        makedirs_safe(b_pathdir, mode=0o700)
+        with contextlib.suppress(FileExistsError):
             fd = os.open(lockfile, os.O_CREAT | os.O_EXCL)
             os.close(fd)
             first_process = True
-        except OSError as e:
-            if e.strerror != 'File exists':
-                raise
 
     counter = 0
     # if the lock is got by other process, wait until it's released
@@ -350,7 +348,7 @@ class LookupModule(LookupBase):
 
         return relpath, params
 
-    def run(self, terms, variables, **kwargs):
+    def run(self, terms, variables=None, **kwargs):
         ret = []
 
         for term in terms:

@@ -23,12 +23,11 @@ import os
 import os.path
 import stat
 import tempfile
-import traceback
 
 from ansible import constants as C
 from ansible.errors import AnsibleError, AnsibleActionFail, AnsibleFileNotFound
 from ansible.module_utils.basic import FILE_COMMON_ARGUMENTS
-from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+from ansible.module_utils.common.text.converters import to_bytes, to_text
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action import ActionBase
 from ansible.utils.hashing import checksum
@@ -389,17 +388,15 @@ class ActionModule(ActionBase):
         return result
 
     def _create_content_tempfile(self, content):
-        ''' Create a tempfile containing defined content '''
+        """ Create a tempfile containing defined content """
         fd, content_tempfile = tempfile.mkstemp(dir=C.DEFAULT_LOCAL_TMP, prefix='.')
-        f = os.fdopen(fd, 'wb')
         content = to_bytes(content)
         try:
-            f.write(content)
+            with os.fdopen(fd, 'wb') as f:
+                f.write(content)
         except Exception as err:
             os.remove(content_tempfile)
             raise Exception(err)
-        finally:
-            f.close()
         return content_tempfile
 
     def _remove_tempfile_if_content_defined(self, content, content_tempfile):
@@ -407,11 +404,12 @@ class ActionModule(ActionBase):
             os.remove(content_tempfile)
 
     def run(self, tmp=None, task_vars=None):
-        ''' handler for file transfer operations '''
+        """ handler for file transfer operations """
         if task_vars is None:
             task_vars = dict()
 
         result = super(ActionModule, self).run(tmp, task_vars)
+
         del tmp  # tmp no longer has any effect
 
         # ensure user is not setting internal parameters
@@ -453,10 +451,10 @@ class ActionModule(ActionBase):
                 else:
                     content_tempfile = self._create_content_tempfile(content)
                 source = content_tempfile
-            except Exception as err:
-                result['failed'] = True
-                result['msg'] = "could not write content temp file: %s" % to_native(err)
-                return self._ensure_invocation(result)
+            except Exception as ex:
+                self._ensure_invocation(result)
+
+                raise AnsibleActionFail(message="could not write content temp file", result=result) from ex
 
         # if we have first_available_file in our vars
         # look up the files and use the first one we find as src
@@ -472,11 +470,10 @@ class ActionModule(ActionBase):
             try:
                 # find in expected paths
                 source = self._find_needle('files', source)
-            except AnsibleError as e:
-                result['failed'] = True
-                result['msg'] = to_text(e)
-                result['exception'] = traceback.format_exc()
-                return self._ensure_invocation(result)
+            except AnsibleError as ex:
+                self._ensure_invocation(result)
+
+                raise AnsibleActionFail(result=result) from ex
 
             if trailing_slash != source.endswith(os.path.sep):
                 if source[-1] == os.path.sep:

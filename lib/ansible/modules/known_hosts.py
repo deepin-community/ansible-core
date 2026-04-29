@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: known_hosts
 short_description: Add or remove a host from the C(known_hosts) file
@@ -65,9 +65,9 @@ extends_documentation_fragment:
   - action_common_attributes
 author:
 - Matthew Vernon (@mcv21)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Tell the host about our servers it might want to ssh to
   ansible.builtin.known_hosts:
     path: /etc/ssh/ssh_known_hosts
@@ -87,7 +87,7 @@ EXAMPLES = r'''
     key: '[host1.example.com]:2222 ssh-rsa ASDeararAIUHI324324' # some key gibberish
     path: /etc/ssh/ssh_known_hosts
     state: present
-'''
+"""
 
 # Makes sure public host keys are present or absent in the given known_hosts
 # file.
@@ -102,7 +102,6 @@ EXAMPLES = r'''
 
 import base64
 import copy
-import errno
 import hashlib
 import hmac
 import os
@@ -169,11 +168,10 @@ def enforce_state(module, params):
     if replace_or_add or found != (state == "present"):
         try:
             inf = open(path, "r")
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                inf = None
-            else:
-                module.fail_json(msg="Failed to read %s: %s" % (path, str(e)))
+        except FileNotFoundError:
+            inf = None
+        except OSError as ex:
+            raise Exception(f"Failed to read {path!r}.") from ex
         try:
             with tempfile.NamedTemporaryFile(mode='w+', dir=os.path.dirname(path), delete=False) as outf:
                 if inf is not None:
@@ -184,8 +182,8 @@ def enforce_state(module, params):
                     inf.close()
                 if state == 'present':
                     outf.write(key)
-        except (IOError, OSError) as e:
-            module.fail_json(msg="Failed to write to file %s: %s" % (path, to_native(e)))
+        except OSError as ex:
+            raise Exception(f"Failed to write to file {path!r}.") from ex
         else:
             module.atomic_move(outf.name, path)
 
@@ -195,13 +193,13 @@ def enforce_state(module, params):
 
 
 def sanity_check(module, host, key, sshkeygen):
-    '''Check supplied key is sensible
+    """Check supplied key is sensible
 
     host and key are parameters provided by the user; If the host
     provided is inconsistent with the key supplied, then this function
     quits, providing an error to the user.
     sshkeygen is the path to ssh-keygen, found earlier with get_bin_path
-    '''
+    """
     # If no key supplied, we're doing a removal, and have nothing to check here.
     if not key:
         return
@@ -220,9 +218,8 @@ def sanity_check(module, host, key, sshkeygen):
         try:
             outf.write(key)
             outf.flush()
-        except IOError as e:
-            module.fail_json(msg="Failed to write to temporary file %s: %s" %
-                             (outf.name, to_native(e)))
+        except OSError as ex:
+            raise Exception(f"Failed to write to temporary file {outf.name!r}.") from ex
 
         sshkeygen_command = [sshkeygen, '-F', host, '-f', outf.name]
         rc, stdout, stderr = module.run_command(sshkeygen_command)
@@ -232,7 +229,7 @@ def sanity_check(module, host, key, sshkeygen):
 
 
 def search_for_host_key(module, host, key, path, sshkeygen):
-    '''search_for_host_key(module,host,key,path,sshkeygen) -> (found,replace_or_add,found_line)
+    """search_for_host_key(module,host,key,path,sshkeygen) -> (found,replace_or_add,found_line)
 
     Looks up host and keytype in the known_hosts file path; if it's there, looks to see
     if one of those entries matches key. Returns:
@@ -241,7 +238,7 @@ def search_for_host_key(module, host, key, path, sshkeygen):
     found_line (int or None): the line where a key of the same type was found
     if found=False, then replace is always False.
     sshkeygen is the path to ssh-keygen, found earlier with get_bin_path
-    '''
+    """
     if os.path.exists(path) is False:
         return False, False, None
 
@@ -304,14 +301,14 @@ def hash_host_key(host, key):
 
 
 def normalize_known_hosts_key(key):
-    '''
+    """
     Transform a key, either taken from a known_host file or provided by the
     user, into a normalized form.
     The host part (which might include multiple hostnames or be hashed) gets
     replaced by the provided host. Also, any spurious information gets removed
     from the end (like the username@host tag usually present in hostkeys, but
     absent in known_hosts files)
-    '''
+    """
     key = key.strip()  # trim trailing newline
     k = key.split()
     d = dict()
@@ -337,9 +334,10 @@ def compute_diff(path, found_line, replace_or_add, state, key):
     }
     try:
         inf = open(path, "r")
-    except IOError as e:
-        if e.errno == errno.ENOENT:
-            diff['before_header'] = '/dev/null'
+    except FileNotFoundError:
+        diff['before_header'] = '/dev/null'
+    except OSError:
+        pass
     else:
         diff['before'] = inf.read()
         inf.close()

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: service
 version_added: "0.1"
@@ -114,9 +114,9 @@ seealso:
 author:
     - Ansible Core Team
     - Michael DeHaan
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Start service httpd, if not started
   ansible.builtin.service:
     name: httpd
@@ -153,9 +153,9 @@ EXAMPLES = r'''
     name: network
     state: restarted
     args: eth0
-'''
+"""
 
-RETURN = r'''#'''
+RETURN = r"""#"""
 
 import glob
 import json
@@ -180,7 +180,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.locale import get_best_parsable_locale
 from ansible.module_utils.common.sys_info import get_platform_subclass
 from ansible.module_utils.service import fail_if_missing, is_systemd_managed
-from ansible.module_utils.six import PY2, b
+from ansible.module_utils.six import b
 
 
 class Service(object):
@@ -285,14 +285,8 @@ class Service(object):
                 os._exit(0)
 
             # Start the command
-            if PY2:
-                # Python 2.6's shlex.split can't handle text strings correctly
-                cmd = to_bytes(cmd, errors='surrogate_or_strict')
-                cmd = shlex.split(cmd)
-            else:
-                # Python3.x shex.split text strings.
-                cmd = to_text(cmd, errors='surrogate_or_strict')
-                cmd = [to_bytes(c, errors='surrogate_or_strict') for c in shlex.split(cmd)]
+            cmd = to_text(cmd, errors='surrogate_or_strict')
+            cmd = [to_bytes(c, errors='surrogate_or_strict') for c in shlex.split(cmd)]
             # In either of the above cases, pass a list of byte strings to Popen
 
             # chkconfig localizes messages and we're screen scraping so make
@@ -695,9 +689,8 @@ class LinuxService(Service):
         #
         if self.enable_cmd.endswith("initctl"):
             def write_to_override_file(file_name, file_contents, ):
-                override_file = open(file_name, 'w')
-                override_file.write(file_contents)
-                override_file.close()
+                with open(file_name, 'w') as override_file:
+                    override_file.write(file_contents)
 
             initpath = '/etc/init'
             if self.upstart_version >= LooseVersion('0.6.7'):

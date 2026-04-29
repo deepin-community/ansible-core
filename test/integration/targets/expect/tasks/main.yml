@@ -51,7 +51,7 @@
   assert:
     that:
       - expect_result is failed
-      - expect_result.msg is contains 'returned non UTF-8 data'  # controller-side failure, not module-side
+      - expect_result.msg is contains 'Refusing to deserialize an invalid UTF8 string value'  # controller-side failure, not module-side
 
 - copy:
    content: "foo"

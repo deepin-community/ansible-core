@@ -26,7 +26,7 @@ from ansible.module_utils.common.text.converters import to_text
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.loader import become_loader, connection_loader, shell_loader
 from ansible.playbook import Playbook
-from ansible.template import Templar
+from ansible._internal._templating._engine import TemplateEngine
 from ansible.utils.helpers import pct_to_int
 from ansible.utils.collection_loader import AnsibleCollectionConfig
 from ansible.utils.collection_loader._collection_finder import _get_collection_name_from_path, _get_collection_playbook_path
@@ -40,10 +40,10 @@ display = Display()
 
 class PlaybookExecutor:
 
-    '''
+    """
     This is the primary class for executing playbooks, and thus the
     basis for bin/ansible-playbook operation.
-    '''
+    """
 
     def __init__(self, playbooks, inventory, variable_manager, loader, passwords):
         self._playbooks = playbooks
@@ -74,10 +74,10 @@ class PlaybookExecutor:
         set_default_transport()
 
     def run(self):
-        '''
+        """
         Run the given playbook, based on the settings in the play which
         may limit the runs to serialized groups, etc.
-        '''
+        """
 
         result = 0
         entrylist = []
@@ -132,7 +132,7 @@ class PlaybookExecutor:
 
                     # Allow variables to be used in vars_prompt fields.
                     all_vars = self._variable_manager.get_vars(play=play)
-                    templar = Templar(loader=self._loader, variables=all_vars)
+                    templar = TemplateEngine(loader=self._loader, variables=all_vars)
                     setattr(play, 'vars_prompt', templar.template(play.vars_prompt))
 
                     # FIXME: this should be a play 'sub object' like loop_control
@@ -158,7 +158,7 @@ class PlaybookExecutor:
 
                     # Post validate so any play level variables are templated
                     all_vars = self._variable_manager.get_vars(play=play)
-                    templar = Templar(loader=self._loader, variables=all_vars)
+                    templar = TemplateEngine(loader=self._loader, variables=all_vars)
                     play.post_validate(templar)
 
                     if context.CLIARGS['syntax']:
@@ -267,10 +267,10 @@ class PlaybookExecutor:
         return result
 
     def _get_serialized_batches(self, play):
-        '''
+        """
         Returns a list of hosts, subdivided into batches based on
         the serial size specified in the play.
-        '''
+        """
 
         # make sure we have a unique list of hosts
         all_hosts = self._inventory.get_hosts(play.hosts, order=play.order)
@@ -313,11 +313,11 @@ class PlaybookExecutor:
         return serialized_batches
 
     def _generate_retry_inventory(self, retry_path, replay_hosts):
-        '''
+        """
         Called when a playbook run fails. It generates an inventory which allows
         re-running on ONLY the failed hosts.  This may duplicate some variable
         information in group_vars/host_vars but that is ok, and expected.
-        '''
+        """
         try:
             makedirs_safe(os.path.dirname(retry_path))
             with open(retry_path, 'w') as fd:
